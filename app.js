@@ -53,6 +53,7 @@
   function tr(key) { return (T[lang] || T.en)[key] || T.en[key] || key; }
   function escapeHtml(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];}); }
   function total(farm) { return resources.reduce(function(sum,key){return sum + (Number(farm[key]) || 0);},0); }
+  function savedResourceCount(farm,key) { var saved=farm&&farm.resources&&typeof farm.resources==='object'?farm.resources:farm; var count=Number(saved&&saved[key]); return isFinite(count)?Math.max(0,Math.min(5,Math.floor(count))):0; }
   function base64UrlDecode(value) { var normalized=value.replace(/-/g,'+').replace(/_/g,'/'); while(normalized.length%4)normalized+='='; var binary=atob(normalized); var bytes=new Uint8Array(binary.length); for(var i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i); return new TextDecoder('utf-8').decode(bytes); }
 
   function loadInitialData() {
@@ -64,7 +65,7 @@
       var supplied = String(payload.language || '').toLowerCase();
       if (supplied && T[supplied]) { lang=supplied; localStorage.setItem('dfb_gather_lang',lang); }
       farms = (Array.isArray(payload.farms) ? payload.farms : []).map(function(farm){
-        return {id:String(farm.id||''),castle_name:String(farm.castle_name||farm.name||''),login:String(farm.login||''),password:'',on_off:Number(farm.on_off)?1:0,food:0,wood:0,steel:0,oil:0};
+        return {id:String(farm.id||''),castle_name:String(farm.castle_name||farm.name||''),login:String(farm.login||''),password:'',on_off:Number(farm.on_off)?1:0,food:savedResourceCount(farm,'food'),wood:savedResourceCount(farm,'wood'),steel:savedResourceCount(farm,'steel'),oil:savedResourceCount(farm,'oil')};
       });
       dataIsValid = Boolean(telegramId && farms.length);
     } catch (error) { console.error(error); }
