@@ -44,6 +44,18 @@
   };
   Object.keys(RADAR_UI).forEach(function(code){Object.keys(RADAR_UI[code]).forEach(function(key){T[code][key]=RADAR_UI[code][key];});});
 
+  var SCHEDULE_UI = {
+    ar:{notice:'اختر وظيفة واحدة لكل قلعة واحفظ الإعدادات. سيقرأ البوت أحدث إعدادات محفوظة وينفذها في دورة التشغيل الدورية التالية.',radarNotice:'سيستلم الجوائز المكتملة وينفذ مهام الرادار المتاحة مرة واحدة في كل دورة تشغيل.',send:'💾 حفظ الإعدادات',sending:'جارٍ حفظ الإعدادات...',sent:'تم إرسال الإعدادات للحفظ. سيؤكد البوت الحفظ في المحادثة ويستخدمها في دورة التشغيل التالية.'},
+    en:{notice:'Choose one action per farm and save it. The bot reads the latest saved settings and executes them in the next scheduled cycle.',radarNotice:'Completed rewards are claimed and available radar missions are processed once per scheduled cycle.',send:'💾 Save settings',sending:'Saving settings...',sent:'Settings were sent for saving. The bot will confirm in chat and use them in the next scheduled cycle.'},
+    fr:{notice:'Choisissez une action par ferme et enregistrez-la. Le bot lit les derniers paramètres enregistrés et les exécute au prochain cycle planifié.',radarNotice:'Les récompenses terminées sont récupérées et les missions disponibles sont traitées une fois par cycle planifié.',send:'💾 Enregistrer les paramètres',sending:'Enregistrement des paramètres...',sent:'Les paramètres ont été envoyés pour enregistrement. Le bot confirmera dans la discussion et les utilisera au prochain cycle planifié.'},
+    de:{notice:'Wähle eine Aktion pro Farm und speichere sie. Der Bot liest die neuesten gespeicherten Einstellungen und führt sie beim nächsten geplanten Lauf aus.',radarNotice:'Fertige Belohnungen werden abgeholt und verfügbare Radarmissionen einmal pro geplantem Lauf bearbeitet.',send:'💾 Einstellungen speichern',sending:'Einstellungen werden gespeichert...',sent:'Die Einstellungen wurden zum Speichern gesendet. Der Bot bestätigt dies im Chat und verwendet sie beim nächsten geplanten Lauf.'},
+    it:{notice:'Scegli un’azione per fattoria e salvala. Il bot legge le impostazioni salvate più recenti e le esegue nel prossimo ciclo pianificato.',radarNotice:'Le ricompense completate vengono riscosse e le missioni disponibili elaborate una volta per ciclo pianificato.',send:'💾 Salva impostazioni',sending:'Salvataggio impostazioni...',sent:'Le impostazioni sono state inviate per il salvataggio. Il bot confermerà in chat e le userà nel prossimo ciclo pianificato.'},
+    es:{notice:'Elige una acción por granja y guárdala. El bot lee la configuración guardada más reciente y la ejecuta en el próximo ciclo programado.',radarNotice:'Se recogen las recompensas completadas y las misiones disponibles se procesan una vez por ciclo programado.',send:'💾 Guardar configuración',sending:'Guardando configuración...',sent:'La configuración se envió para guardarla. El bot lo confirmará en el chat y la usará en el próximo ciclo programado.'},
+    pt:{notice:'Escolha uma ação por fazenda e salve-a. O bot lê as configurações salvas mais recentes e as executa no próximo ciclo agendado.',radarNotice:'As recompensas concluídas são coletadas e as missões disponíveis processadas uma vez por ciclo agendado.',send:'💾 Salvar configurações',sending:'Salvando configurações...',sent:'As configurações foram enviadas para salvar. O bot confirmará no chat e as usará no próximo ciclo agendado.'},
+    ru:{notice:'Выберите одно действие для каждой фермы и сохраните его. Бот прочитает последние сохранённые настройки и выполнит их в следующем плановом цикле.',radarNotice:'Готовые награды забираются, а доступные задания обрабатываются один раз за плановый цикл.',send:'💾 Сохранить настройки',sending:'Сохранение настроек...',sent:'Настройки отправлены на сохранение. Бот подтвердит это в чате и использует их в следующем плановом цикле.'}
+  };
+  Object.keys(SCHEDULE_UI).forEach(function(code){Object.keys(SCHEDULE_UI[code]).forEach(function(key){T[code][key]=SCHEDULE_UI[code][key];});});
+
   var lang = localStorage.getItem('dfb_gather_lang') || '';
   var farms = [];
   var telegramId = '';
@@ -126,7 +138,7 @@
     if(!dataIsValid){showMessage(tr('invalidData'),false);return;}
     var orders=farms.map(function(farm){return {farm_id:farm.id,operation:farm.operation,zombie:{level:farm.zombie_level,multiplier:farm.zombie_multiplier},radar:{allow_bag_resources:farm.radar_allow_bag_resources===true},settings:{castle_name:farm.castle_name,login:farm.login,password:farm.password,on_off:farm.on_off?1:0},resources:{food:farm.food,wood:farm.wood,steel:farm.steel,oil:farm.oil}};});
     tg=telegramApp(); if(!tg||typeof tg.sendData!=='function'){showMessage(tr('openTelegram'),false);return;}
-    var json=JSON.stringify({action:'save_and_execute',language:lang||'en',orders:orders});
+    var json=JSON.stringify({action:'save_settings',language:lang||'en',orders:orders});
     if(json.length>4096){showMessage('Request is too large.',false);return;}
     sendBtn.disabled=true;sendBtn.textContent=tr('sending');
     try{tg.sendData(json);showMessage(tr('sent'),true);}catch(error){console.error(error);sendBtn.disabled=false;sendBtn.textContent=tr('send');showMessage(error.message||tr('openTelegram'),false);}
