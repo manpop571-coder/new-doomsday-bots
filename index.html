@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#112535">
+  <title>Doomsday Resource Gathering</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css?v=2">
+  <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div id="eyebrow" class="eyebrow">لوحة جمع الموارد</div>
+        <h1 id="appTitle">Doomsday Farm Bots</h1>
+      </div>
+      <button id="languageBtn" class="icon-btn" type="button" aria-label="تغيير اللغة" title="تغيير اللغة">🌐</button>
+    </header>
+
+    <section id="languageScreen" class="panel language-panel" hidden></section>
+
+    <section id="appScreen" hidden>
+      <div id="userInfo" class="user-info"></div>
+      <div class="notice" id="notice"></div>
+      <div id="farms" class="farm-list"></div>
+
+      <div class="save-dock">
+        <button id="sendBtn" class="save-btn" type="button"></button>
+        <div id="message" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+  <script src="./app.js?v=2"></script>
+</body>
+</html>
