@@ -160,7 +160,7 @@
     return LANGS.some(function(x){return x[0]===language;})?language:'en';
   }
   var payload = decodeData();
-  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, screen:'home', current:null, editorTab:'identity', copyMode:null, source:null, targets:{}, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
+  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
   if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
     state.lang = normalizeUiLanguage(localStorage.getItem('doomsday-lang') || payload.language || payload.l || 'en');
     state.kingdom = Number(payload.kingdom_id || payload.k || 0);
@@ -196,6 +196,8 @@
   function stockTimeHtml(farm){if(!farm.resource_snapshot_at){return '';}var date=new Date(farm.resource_snapshot_at*1000);return '<div class="stock-time">'+esc(tr('stockUpdated'))+': '+esc(date.toLocaleString(state.lang))+'</div>';}
   function hasProtectedAccess(){return false;}
   function requireProtectedAccess(){if(hasProtectedAccess()){return true;}var notice=tr('notAuthorized');setMessage(notice,'error');if(tg&&typeof tg.showAlert==='function'&&(!tg.isVersionAtLeast||tg.isVersionAtLeast('6.2'))){try{tg.showAlert(notice);}catch(_){}}return false;}
+  function isEditorTabAllowed(tab){return tab==='identity'||tab==='gathering';}
+  function isEditorTabLocked(tab){return !isEditorTabAllowed(tab);}
   function primaryTabsHtml(active){var locked=!hasProtectedAccess();return '<nav class="screen-tabs" aria-label="'+esc(tr('title'))+'"><button class="screen-tab '+(active==='castles'?'active':'')+'" type="button" data-primary-tab="castles">🏰 '+esc(tr('castlesTab'))+'</button><button class="screen-tab '+(active==='transfer'?'active ':'')+(locked?'locked':'')+'" type="button" data-primary-tab="transfer" aria-disabled="'+String(locked)+'">'+(locked?'🔒 ':'📦 ')+esc(tr('sendTransfer'))+'</button></nav>';}
   function bindPrimaryTabs(root){root.querySelectorAll('[data-primary-tab]').forEach(function(button){button.onclick=function(){if(button.dataset.primaryTab==='castles'){renderHome();return;}if(requireProtectedAccess()){renderTransfer();}};});}
   function direction() { var rtl = state.lang === 'ar'; document.documentElement.dir = rtl ? 'rtl' : 'ltr'; document.documentElement.lang = state.lang; document.body.dataset.lang = state.lang; }
@@ -207,7 +209,7 @@
   }
 
   function renderHome() {
-    state.screen = 'home'; state.current = null; state.editorTab='identity'; direction(); language.hidden = editor.hidden = transfer.hidden = true; home.hidden = false; backBtn.hidden = true; saveBtn.parentElement.hidden = false;
+    state.screen = 'home'; state.current = null; state.editorTab=null; direction(); language.hidden = editor.hidden = transfer.hidden = true; home.hidden = false; backBtn.hidden = true; saveBtn.parentElement.hidden = false;
     document.getElementById('eyebrow').textContent = tr('eyebrow'); document.getElementById('title').textContent = tr('title'); saveBtn.textContent = '💾 ' + tr('save');
     var rows = state.farms.filter(function(f){var q=state.search.toLowerCase();return !q || f.id.toLowerCase().includes(q) || f.castle_name.toLowerCase().includes(q);});
     var helper = state.copyMode ? '<div class="copy-panel">'+esc(state.copyMode==='source'?tr('chooseSource'):tr('chooseTargets'))+(state.source?' <b>'+esc(tr('source'))+': '+esc(state.source.castle_name)+'</b>':'')+'</div>' : '';
@@ -235,11 +237,11 @@
   function selectCastle(farm) {
     if (state.copyMode==='source') { state.source=farm;state.copyMode='targets';renderHome();return; }
     if (state.copyMode==='targets') { if(state.source&&farm.id===state.source.id){return;}state.targets[farm.id]=!state.targets[farm.id];renderHome();return; }
-    state.current=farm;state.editorTab='identity';renderEditor();
+    state.current=farm;state.editorTab=null;renderEditor();
   }
   function applyCopy() {
     var ids=Object.keys(state.targets).filter(function(id){return state.targets[id];}); if(!ids.length){setMessage(tr('selectTarget'),'error');return;}
-    ids.forEach(function(id){var farm=state.farms.find(function(f){return f.id===id;});farm.resources=clone(state.source.resources);farm.zombie=clone(state.source.zombie);['gathering','zombie','arena_store','vip_store'].forEach(function(key){farm.features[key]=!!state.source.features[key];});farm.shops=clone(state.source.shops);});
+    ids.forEach(function(id){var farm=state.farms.find(function(f){return f.id===id;});farm.resources=clone(state.source.resources);farm.features.gathering=!!state.source.features.gathering;});
     state.copyMode=null;state.targets={};setMessage(tr('copied'),'success');renderHome();
   }
 
@@ -280,9 +282,9 @@
     var f=state.current;state.screen='editor';direction();home.hidden=language.hidden=transfer.hidden=true;editor.hidden=false;backBtn.hidden=false;saveBtn.parentElement.hidden=false;saveBtn.textContent='💾 '+tr('save');
     document.getElementById('title').textContent=f.castle_name;
     editor.innerHTML='<div class="editor-head"><div><h2>🏰 '+esc(f.castle_name)+'</h2><div class="castle-id">ID '+esc(f.id)+'</div></div><label class="power-control"><b id="powerLabel">'+esc(f.on_off?tr('on'):tr('off'))+'</b>'+fireSwitch('id="power" type="checkbox"',!!f.on_off)+'</label></div>'+
-      editorTabsHtml()+editorTabHtml(f);
+      editorTabsHtml()+(state.editorTab?editorTabHtml(f):'');
     document.getElementById('power').onchange=function(){var enabled=this.checked,previous=!!f.on_off;if(!sendFarmEnabled(f,enabled)){this.checked=previous;return;}f.on_off=enabled?1:0;document.getElementById('powerLabel').textContent=tr(enabled?'on':'off');};
-    editor.querySelectorAll('[data-editor-tab]').forEach(function(button){button.onclick=function(){var tab=button.dataset.editorTab;if(tab==='functions'&&!requireProtectedAccess()){return;}state.editorTab=tab;renderEditor();};});
+    editor.querySelectorAll('[data-editor-tab]').forEach(function(button){button.onclick=function(){var tab=button.dataset.editorTab;if(isEditorTabLocked(tab)){requireProtectedAccess();return;}state.editorTab=tab;renderEditor();};});
     editor.querySelectorAll('[data-field]').forEach(function(input){input.oninput=function(){f[input.dataset.field]=input.value;};});
     editor.querySelectorAll('[data-feature]').forEach(function(input){input.onchange=function(){f.features[input.dataset.feature]=input.checked;};});
     editor.querySelectorAll('[data-step]').forEach(function(btn){btn.onclick=function(){var k=btn.dataset.resource,delta=Number(btn.dataset.step),next=Math.max(0,Math.min(5,Number(f.resources[k])+delta));if(delta>0&&total(f)>=5){setMessage(tr('maxFive'),'error');return;}f.resources[k]=next;renderEditor();};});
@@ -290,8 +292,8 @@
     editor.querySelectorAll('[data-shop]').forEach(function(input){input.onchange=function(){var shop=input.dataset.shop,id=Number(input.dataset.item),list=f.shops[shop]||[];f.shops[shop]=input.checked?Array.from(new Set(list.concat([id]))):list.filter(function(x){return Number(x)!==id;});};});
     var showPass=document.getElementById('showPass');if(showPass){showPass.onclick=function(){var p=document.getElementById('password');p.type=p.type==='password'?'text':'password';};}
   }
-  function editorTabsHtml(){var tabs=[['identity','◆',tr('castleSettings')],['functions','⚙',tr('functions')],['gathering','⛏',tr('gather')],['zombie','☣',tr('zombie')],['arena','🏟',tr('arenaStore')],['vip','👑',tr('vipStore')]];return '<nav class="editor-tabs" aria-label="'+esc(tr('castleSettings'))+'">'+tabs.map(function(tab){var locked=tab[0]==='functions'&&!hasProtectedAccess();return '<button class="editor-tab '+(state.editorTab===tab[0]?'active ':'')+(locked?'locked':'')+'" type="button" data-editor-tab="'+tab[0]+'" aria-selected="'+String(state.editorTab===tab[0])+'" aria-disabled="'+String(locked)+'">'+(locked?'🔒':tab[1])+'<span>'+esc(tab[2])+'</span></button>';}).join('')+'</nav>';}
-  function editorTabHtml(f){if(state.editorTab==='functions'){return protectedPanelHtml();}if(state.editorTab==='gathering'){return resourcesHtml(f);}if(state.editorTab==='zombie'){return zombieHtml(f);}if(state.editorTab==='arena'){return shopHtml('arena',tr('arenaStore'),f);}if(state.editorTab==='vip'){return shopHtml('vip',tr('vipStore'),f);}return identityHtml(f);}
+  function editorTabsHtml(){var tabs=[['identity','◆',tr('castleSettings')],['functions','⚙',tr('functions')],['gathering','⛏',tr('gather')],['zombie','☣',tr('zombie')],['arena','🏟',tr('arenaStore')],['vip','👑',tr('vipStore')]];return '<nav class="editor-tabs" aria-label="'+esc(tr('castleSettings'))+'">'+tabs.map(function(tab){var locked=isEditorTabLocked(tab[0]);return '<button class="editor-tab '+(state.editorTab===tab[0]?'active ':'')+(locked?'locked':'')+'" type="button" data-editor-tab="'+tab[0]+'" aria-selected="'+String(state.editorTab===tab[0])+'" aria-disabled="'+String(locked)+'">'+(locked?'🔒':tab[1])+'<span>'+esc(tab[2])+'</span></button>';}).join('')+'</nav>';}
+  function editorTabHtml(f){if(!isEditorTabAllowed(state.editorTab)){return '';}if(state.editorTab==='identity'){return identityHtml(f);}if(state.editorTab==='gathering'){return resourcesHtml(f);}return '';}
   function protectedPanelHtml(){return '<section class="section-card protected-panel"><span>🔒</span><h3>'+esc(tr('protectedSection'))+'</h3><p>'+esc(tr('notAuthorized'))+'</p></section>';}
   function identityHtml(f){return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label><label class="form-row"><span class="label">'+esc(tr('email'))+'</span><input class="field" data-field="login" type="email" value="'+esc(f.login)+'"></label><label class="form-row full"><span class="label">'+esc(tr('password'))+'</span><span class="password-wrap"><input id="password" class="field" data-field="password" type="password" value="" placeholder="'+esc(tr('passwordHint'))+'"><button id="showPass" class="small-btn" type="button">👁</button></span></label></div></section>';}
   function featureToggleHtml(key,label,f){return '<label class="context-feature"><span><small>'+esc(tr('functions'))+'</small><b>'+esc(label)+'</b></span>'+fireSwitch('type="checkbox" data-feature="'+key+'" aria-label="'+esc(label)+'"',!!f.features[key])+'</label>';}
