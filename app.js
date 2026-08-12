@@ -323,6 +323,20 @@
     for(var i=0;i<state.farms.length;i++){var f=state.farms[i];if(!f.login||total(f)>5||Number(f.zombie.min_level)<1||Number(f.zombie.max_level)>100||Number(f.zombie.min_level)>Number(f.zombie.max_level)){return false;}}
     return true;
   }
+  function base64Url(bytes){
+    var binary='',size=0x8000;
+    for(var offset=0;offset<bytes.length;offset+=size){binary+=String.fromCharCode.apply(null,bytes.subarray(offset,offset+size));}
+    return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  async function compressedSaveRequest(request){
+    if(typeof CompressionStream!=='function'){throw new Error('compression unavailable');}
+    var source=new TextEncoder().encode(JSON.stringify(request));
+    var stream=new Blob([source]).stream().pipeThrough(new CompressionStream('deflate'));
+    var compressed=new Uint8Array(await new Response(stream).arrayBuffer());
+    var wire=JSON.stringify({z:1,d:base64Url(compressed)});
+    if(new TextEncoder().encode(wire).length>4096){throw new Error('save request too large');}
+    return wire;
+  }
   function sendFarmEnabled(farm,enabled){
     if(!payload||!hasTelegramScope()){setMessage(tr('notAuthorized'),'error');return false;}
     if(!tg){setMessage(tr('openTelegram'),'error');return false;}
@@ -338,17 +352,17 @@
     try{tg.sendData(JSON.stringify({action:'set_language',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner}));}
     catch(_){setMessage(tr('invalid'),'error');saveBtn.disabled=false;}
   }
-  function saveAll() {
+  async function saveAll() {
     setMessage('','');if(!payload||!validate()){setMessage(tr('invalid'),'error');return;}if(!tg){setMessage(tr('openTelegram'),'error');return;}
     saveBtn.disabled=true;saveBtn.textContent=tr('saving');
     var orders=state.farms.map(function(f){return {farm_id:f.id,settings:{castle_name:f.castle_name,login:f.login,password:f.password,on_off:f.on_off},resources:f.resources,operation:'gather',zombie:f.zombie,features:f.features,shops:f.shops};});
-    try { tg.sendData(JSON.stringify({action:'save_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,orders:orders}));setMessage(tr('saved'),'success'); }
+    try { var request={action:'save_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,orders:orders};tg.sendData(await compressedSaveRequest(request));setMessage(tr('saved'),'success'); }
     catch(_){setMessage(tr('invalid'),'error');saveBtn.disabled=false;saveBtn.textContent='💾 '+tr('save');}
   }
 
   backBtn.onclick=function(){renderHome();};
   document.getElementById('languageBtn').onclick=renderLanguage;
-  saveBtn.onclick=function(){if(state.screen==='language'){confirmLanguage();return;}saveAll();};
+  saveBtn.onclick=async function(){if(state.screen==='language'){confirmLanguage();return;}await saveAll();};
   if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
   else { renderHome(); }
 })();
