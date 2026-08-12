@@ -329,8 +329,9 @@
     return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   }
   async function compressedSaveRequest(request){
+    var raw=JSON.stringify(request),source=new TextEncoder().encode(raw);
+    if(source.length<=4096){return raw;}
     if(typeof CompressionStream!=='function'){throw new Error('compression unavailable');}
-    var source=new TextEncoder().encode(JSON.stringify(request));
     var stream=new Blob([source]).stream().pipeThrough(new CompressionStream('deflate'));
     var compressed=new Uint8Array(await new Response(stream).arrayBuffer());
     var wire=JSON.stringify({z:1,d:base64Url(compressed)});
