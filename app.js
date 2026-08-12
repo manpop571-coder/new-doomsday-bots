@@ -176,11 +176,13 @@
     return LANGS.some(function(x){return x[0]===language;})?language:'en';
   }
   var payload = await decodeData();
-  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
+  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
   if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
     state.lang = normalizeUiLanguage(localStorage.getItem('doomsday-lang') || payload.language || payload.l || 'en');
     state.kingdom = Number(payload.kingdom_id || payload.k || 0);
     state.owner = Number(payload.owner_telegram_id || payload.o || payload.telegram_id || payload.t || 0);
+    state.adminEdit = Number(payload.admin_edit || payload.a || 0) === 1;
+    state.adminFarmId = String(payload.admin_farm_id || payload.x || '');
     state.catalog = payload.shop_catalog || state.catalog;
     var rawFarms = payload.farms || payload.f.map(function(row){
       var featureKeys=FEATURE_GROUPS.reduce(function(a,b){return a.concat(b);},[]), features={};
@@ -196,7 +198,8 @@
         features:features, shops:Object.assign({arena:[],vip:[]}, farm.shops || {}), resource_snapshot:farm.resource_snapshot, resource_snapshot_at:Number(farm.resource_snapshot_at||0)
       };
     });
-    if(!Number.isInteger(state.kingdom)||state.kingdom<=0){payload=null;state.farms=[];}
+    if(state.adminEdit){state.farms=state.farms.filter(function(farm){return farm.id===state.adminFarmId;});}
+    if(!Number.isInteger(state.kingdom)||state.kingdom<=0||(state.adminEdit&&state.farms.length!==1)){payload=null;state.farms=[];}
   }
 
   var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen');
@@ -312,7 +315,7 @@
   function editorTabsHtml(){var tabs=[['identity','◆',tr('castleSettings')],['functions','⚙',tr('functions')],['gathering','⛏',tr('gather')],['zombie','☣',tr('zombie')],['arena','🏟',tr('arenaStore')],['vip','👑',tr('vipStore')]];return '<nav class="editor-tabs" aria-label="'+esc(tr('castleSettings'))+'">'+tabs.map(function(tab){var locked=isEditorTabLocked(tab[0]);return '<button class="editor-tab '+(state.editorTab===tab[0]?'active ':'')+(locked?'locked':'')+'" type="button" data-editor-tab="'+tab[0]+'" aria-selected="'+String(state.editorTab===tab[0])+'" aria-disabled="'+String(locked)+'">'+(locked?'🔒':tab[1])+'<span>'+esc(tab[2])+'</span></button>';}).join('')+'</nav>';}
   function editorTabHtml(f){if(!isEditorTabAllowed(state.editorTab)){return '';}if(state.editorTab==='identity'){return identityHtml(f);}if(state.editorTab==='gathering'){return resourcesHtml(f);}return '';}
   function protectedPanelHtml(){return '<section class="section-card protected-panel"><span>🔒</span><h3>'+esc(tr('protectedSection'))+'</h3><p>'+esc(tr('notAuthorized'))+'</p></section>';}
-  function identityHtml(f){return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label><label class="form-row"><span class="label">'+esc(tr('email'))+'</span><input class="field" data-field="login" type="email" value="'+esc(f.login)+'"></label><label class="form-row full"><span class="label">'+esc(tr('password'))+'</span><span class="password-wrap"><input id="password" class="field" data-field="password" type="password" value="" placeholder="'+esc(tr('passwordHint'))+'"><button id="showPass" class="small-btn" type="button">👁</button></span></label></div></section>';}
+  function identityHtml(f){var credentials=state.adminEdit?'':'<label class="form-row"><span class="label">'+esc(tr('email'))+'</span><input class="field" data-field="login" type="email" value="'+esc(f.login)+'"></label><label class="form-row full"><span class="label">'+esc(tr('password'))+'</span><span class="password-wrap"><input id="password" class="field" data-field="password" type="password" value="" placeholder="'+esc(tr('passwordHint'))+'"><button id="showPass" class="small-btn" type="button">👁</button></span></label>';return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label>'+credentials+'</div></section>';}
   function featureToggleHtml(key,label,f){return '<label class="context-feature"><span><small>'+esc(tr('functions'))+'</small><b>'+esc(label)+'</b></span>'+fireSwitch('type="checkbox" data-feature="'+key+'" aria-label="'+esc(label)+'"',!!f.features[key])+'</label>';}
   function resourcesHtml(f){return featureToggleHtml('gathering',featureName('gathering'),f)+'<section class="section-card"><h3 class="section-title"><span>⛏</span>'+esc(tr('gather'))+'</h3><div class="resource-grid">'+['food','wood','steel','oil'].map(function(k){return '<div class="resource"><b>'+esc(tr(k))+'</b><button class="step" data-resource="'+k+'" data-step="-1">−</button><span class="count">'+Number(f.resources[k])+'</span><button class="step" data-resource="'+k+'" data-step="1">+</button></div>';}).join('')+'</div><div class="total"><span>'+esc(tr('total'))+'</span><strong>'+total(f)+' / 5</strong></div></section>';}
   function zombieHtml(f){var options=['auto','10','5','2','1'];return featureToggleHtml('zombie',featureName('zombie'),f)+'<section class="section-card"><h3 class="section-title"><span>☣</span>'+esc(tr('zombie'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('maxLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="max_level" value="'+Number(f.zombie.max_level)+'"></label><label class="form-row"><span class="label">'+esc(tr('minLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="min_level" value="'+Number(f.zombie.min_level)+'"></label><label class="form-row full"><span class="label">'+esc(tr('multiplier'))+'</span><select class="select" data-zombie="multiplier">'+options.map(function(x){return '<option value="'+x+'" '+(String(f.zombie.multiplier)===x?'selected':'')+'>'+(x==='auto'?esc(tr('auto')):(x==='1'?esc(tr('normal')):'×'+x))+'</option>';}).join('')+'</select></label></div></section>';}
@@ -320,7 +323,7 @@
   function shopList(name,title,f){var selected=(f.shops[name]||[]).map(Number);var items=state.catalog[name]||[];return '<h4>'+esc(title)+'</h4><div class="shop-list">'+items.map(function(item){var unlock=item.unlock_level?(name==='vip'?tr('vip')+' ': 'Rank ')+item.unlock_level:'';return '<label class="shop-item">'+fireSwitch('type="checkbox" data-shop="'+name+'" data-item="'+item.item_id+'"',selected.includes(Number(item.item_id)))+'<span><div class="shop-item-name">'+esc(itemName(item))+'</div><div class="shop-item-meta">ID '+item.item_id+' · '+esc(tr('qty'))+' '+item.quantity+(unlock?' · '+esc(unlock):'')+'</div></span><span class="price">'+item.price+' '+esc(name==='arena'?tr('points'):tr(['','gems','oil','food','wood','steel'][item.currency_subtype]||''))+'</span></label>';}).join('')+'</div>';}
 
   function validate() {
-    for(var i=0;i<state.farms.length;i++){var f=state.farms[i];if(!f.login||total(f)>5||Number(f.zombie.min_level)<1||Number(f.zombie.max_level)>100||Number(f.zombie.min_level)>Number(f.zombie.max_level)){return false;}}
+    for(var i=0;i<state.farms.length;i++){var f=state.farms[i];if((!state.adminEdit&&!f.login)||total(f)>5||Number(f.zombie.min_level)<1||Number(f.zombie.max_level)>100||Number(f.zombie.min_level)>Number(f.zombie.max_level)){return false;}}
     return true;
   }
   function base64Url(bytes){
@@ -341,10 +344,11 @@
   function sendFarmEnabled(farm,enabled){
     if(!payload||!hasTelegramScope()){setMessage(tr('notAuthorized'),'error');return false;}
     if(!tg){setMessage(tr('openTelegram'),'error');return false;}
-    try{tg.sendData(JSON.stringify({action:'set_farm_enabled',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,farm_id:farm.id,enabled:!!enabled}));setMessage(tr('saved'),'success');return true;}
+    try{tg.sendData(JSON.stringify(addAdminScope({action:'set_farm_enabled',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,farm_id:farm.id,enabled:!!enabled})));setMessage(tr('saved'),'success');return true;}
     catch(_){setMessage(tr('invalid'),'error');return false;}
   }
   function hasTelegramScope(){return state.owner>0&&state.kingdom>0;}
+  function addAdminScope(request){if(state.adminEdit){request.a=1;request.x=state.adminFarmId;}return request;}
   function confirmLanguage(){
     setMessage('','');
     if(!payload||!hasTelegramScope()){setMessage(tr('notAuthorized'),'error');return;}
@@ -357,7 +361,7 @@
     setMessage('','');if(!payload||!validate()){setMessage(tr('invalid'),'error');return;}if(!tg){setMessage(tr('openTelegram'),'error');return;}
     saveBtn.disabled=true;saveBtn.textContent=tr('saving');
     var orders=state.farms.map(function(f){return {farm_id:f.id,settings:{castle_name:f.castle_name,login:f.login,password:f.password,on_off:f.on_off},resources:f.resources,operation:'gather',zombie:f.zombie,features:f.features,shops:f.shops};});
-    try { var request={action:'save_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,orders:orders};tg.sendData(await compressedSaveRequest(request));setMessage(tr('saved'),'success'); }
+    try { var request=addAdminScope({action:'save_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,orders:orders});tg.sendData(await compressedSaveRequest(request));setMessage(tr('saved'),'success'); }
     catch(_){setMessage(tr('invalid'),'error');saveBtn.disabled=false;saveBtn.textContent='💾 '+tr('save');}
   }
 
@@ -365,5 +369,6 @@
   document.getElementById('languageBtn').onclick=renderLanguage;
   saveBtn.onclick=async function(){if(state.screen==='language'){confirmLanguage();return;}await saveAll();};
   if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
+  else if(state.adminEdit&&state.farms.length===1){state.current=state.farms[0];renderEditor();}
   else { renderHome(); }
 })();
