@@ -63,8 +63,8 @@
     ja:{eyebrow:'城指令センター',title:'Doomsday コマンド',subtitle:'すべての城を一つのパネルで管理します。',telegram:'Telegram ID',search:'名前または城 ID で検索',copy:'設定をコピー',cancel:'キャンセル',apply:'設定を適用',chooseSource:'コピー元の城を選択してください。',chooseTargets:'対象の城を一つ以上選択してください。',copied:'選択した城に設定をコピーしました。',noFarms:'この Telegram アカウントに城が登録されていません。',on:'稼働中',off:'停止中',save:'すべての設定を保存',saving:'保存中…',saved:'設定をボットに送信しました。',openTelegram:'Telegram ボットからこのページを開いてください。',invalid:'城のデータが無効です。ボットから開き直してください。',back:'戻る',identity:'城の情報',nickname:'城の名前',email:'IGG メール',password:'新しいパスワード',passwordHint:'保存済みパスワードを維持する場合は空欄',functions:'自動化機能',gather:'資源採集',food:'食料',wood:'木材',steel:'鋼鉄',oil:'石油',total:'軍団の合計',maxFive:'最大 5 軍団です。',zombie:'反乱軍 / ゾンビ設定',maxLevel:'最高レベル',minLevel:'最低レベル',multiplier:'倍率',auto:'自動：×10、×5、×2、その後通常',normal:'通常',shops:'ショップ',arenaStore:'アリーナショップ',vipStore:'VIP ショップ — 資源商品のみ',shopSafety:'選択済みで現在購入可能な商品をすべて購入します。ダイヤと有料回数は常に禁止です。',points:'ポイント',vip:'VIP',qty:'数量',language:'言語',source:'コピー元',targets:'対象',selectTarget:'先に対象の城を選択してください。',transfer:'資源を送る',transferTarget:'受取先の城 ID',transferHint:'複数の農場を選び、共通の合計目標を一つ入力します。',selectedFarms:'選択した農場',enterAmounts:'資源の合計目標',sendTransfer:'資源を送る',confirmTransfer:'送信を確認',transferInvalid:'有効な対象 ID、1 つ以上の農場、資源量を入力してください。',transferSent:'リクエストを送信しました。詳細レポートは Telegram に届きます。',aggregateHint:'選択した農場が順番に送り、合計目標に達すると残りは自動停止します。',aggregateAmounts:'農場ごとの量ではなく、選択した全農場の合計を入力してください。',selectAll:'すべて選択',clearAll:'クリア'},
     vi:{eyebrow:'TRUNG TÂM CHỈ HUY LÂU ĐÀI',title:'Chỉ huy Doomsday',subtitle:'Quản lý mọi lâu đài từ một bảng điều khiển.',telegram:'ID Telegram',search:'Tìm theo tên hoặc ID lâu đài',copy:'Sao chép cài đặt',cancel:'Hủy',apply:'Áp dụng cài đặt',chooseSource:'Chọn lâu đài nguồn.',chooseTargets:'Chọn một hoặc nhiều lâu đài đích.',copied:'Đã sao chép cài đặt sang các lâu đài đã chọn.',noFarms:'Không có lâu đài liên kết với tài khoản Telegram này.',on:'ĐANG CHẠY',off:'ĐÃ DỪNG',save:'Lưu mọi cài đặt',saving:'Đang lưu…',saved:'Đã gửi cài đặt tới bot.',openTelegram:'Mở trang này từ bot Telegram.',invalid:'Dữ liệu lâu đài không hợp lệ. Hãy mở lại từ bot.',back:'Quay lại',identity:'Thông tin lâu đài',nickname:'Tên lâu đài',email:'Email IGG',password:'Mật khẩu mới',passwordHint:'Để trống để giữ mật khẩu đã lưu',functions:'Chức năng tự động',gather:'Thu thập tài nguyên',food:'Lương thực',wood:'Gỗ',steel:'Thép',oil:'Dầu',total:'Tổng số quân đoàn',maxFive:'Tối đa 5 quân đoàn.',zombie:'Cài đặt phiến quân / zombie',maxLevel:'Cấp cao nhất',minLevel:'Cấp thấp nhất',multiplier:'Hệ số',auto:'Tự động: ×10, ×5, ×2 rồi thường',normal:'Thường',shops:'Cửa hàng',arenaStore:'Cửa hàng Đấu trường',vipStore:'Cửa hàng VIP — chỉ dùng tài nguyên',shopSafety:'Bot chỉ mua toàn bộ vật phẩm đã chọn và đang có. Kim cương và lượt trả phí luôn bị chặn.',points:'điểm',vip:'VIP',qty:'SL',language:'Ngôn ngữ',source:'Nguồn',targets:'Đích',selectTarget:'Hãy chọn lâu đài đích trước.',transfer:'Gửi tài nguyên',transferTarget:'ID lâu đài nhận',transferHint:'Chọn nhiều nông trại và nhập một mục tiêu tổng chung.',selectedFarms:'Nông trại đã chọn',enterAmounts:'Mục tiêu tổng tài nguyên',sendTransfer:'Gửi tài nguyên',confirmTransfer:'Xác nhận gửi',transferInvalid:'Nhập ID đích hợp lệ, chọn ít nhất một nông trại và nhập lượng tài nguyên.',transferSent:'Đã gửi yêu cầu. Báo cáo chi tiết sẽ được gửi qua Telegram.',aggregateHint:'Các nông trại gửi lần lượt đến khi đủ mục tiêu tổng; nông trại sau sẽ tự dừng.',aggregateAmounts:'Nhập tổng cần từ tất cả nông trại đã chọn, không phải số lượng mỗi nông trại.',selectAll:'Chọn tất cả',clearAll:'Xóa'}
   });
-  Object.assign(EN,{pendingConfirmation:'Request sent. Wait for confirmation from the bot.'});
-  Object.assign(OV.ar,{pendingConfirmation:'تم إرسال الطلب، انتظر تأكيد البوت.'});
+  Object.assign(EN,{pendingConfirmation:'Request sent. Wait for confirmation from the bot.',saveFarm:'Save castle settings',copyPending:'Copy request sent. Wait for confirmation from the bot.'});
+  Object.assign(OV.ar,{pendingConfirmation:'تم إرسال الطلب، انتظر تأكيد البوت.',saveFarm:'حفظ إعدادات القلعة',copyPending:'تم إرسال طلب النسخ، انتظر تأكيد البوت.'});
 
   var REGION_OV = {
     ar:{region:'المنطقة',ordinaryResources:'الموارد العادية المفتوحة',stockUpdated:'آخر تأكيد',stockUnavailable:'في انتظار اتصال البوت التالي',stockLimitNote:'قد تكون الكمية المرسلة أقل بسبب حدود مركز التجارة والضريبة وحد استقبال القلعة.'},
@@ -178,7 +178,7 @@
     return LANGS.some(function(x){return x[0]===language;})?language:'en';
   }
   var payload = await decodeData();
-  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
+  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
   if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
     state.lang = normalizeUiLanguage(localStorage.getItem('doomsday-lang') || payload.language || payload.l || 'en');
     state.kingdom = Number(payload.kingdom_id || payload.k || 0);
@@ -187,17 +187,18 @@
     state.adminFarmId = String(payload.admin_farm_id || payload.x || '');
     state.catalog = payload.shop_catalog || state.catalog;
     var rawFarms = payload.farms || payload.f.map(function(row){
+      var offset=Number(payload.v||0)>=4?-1:0;
       var featureKeys=FEATURE_GROUPS.reduce(function(a,b){return a.concat(b);},[]), features={};
-      FEATURE_MASK_KEYS.forEach(function(key,index){if(featureKeys.indexOf(key)!==-1){features[key]=!!(Number(row[6]) & Math.pow(2,index));}});
-      return {id:row[0],castle_name:row[1],login:row[2],on_off:row[3],resources:{food:row[4][0],wood:row[4][1],steel:row[4][2],oil:row[4][3]},zombie:{max_level:row[5][0],min_level:row[5][1],multiplier:String(row[5][2])},features:features,shops:{arena:row[7]||[],vip:row[8]||[]},resource_snapshot:Array.isArray(row[9])?{food:row[9][0],wood:row[9][1],steel:row[9][2],oil:row[9][3]}:null,resource_snapshot_at:Number(row[10]||0)};
+      FEATURE_MASK_KEYS.forEach(function(key,index){if(featureKeys.indexOf(key)!==-1){features[key]=!!(Number(row[6+offset]) & Math.pow(2,index));}});
+      return {id:row[0],castle_name:row[1],on_off:row[3+offset],resources:{food:row[4+offset][0],wood:row[4+offset][1],steel:row[4+offset][2],oil:row[4+offset][3]},zombie:{max_level:row[5+offset][0],min_level:row[5+offset][1],multiplier:String(row[5+offset][2])},features:features,shops:{arena:row[7+offset]||[],vip:row[8+offset]||[]},resource_snapshot:Array.isArray(row[9+offset])?{food:row[9+offset][0],wood:row[9+offset][1],steel:row[9+offset][2],oil:row[9+offset][3]}:null,resource_snapshot_at:Number(row[10+offset]||0),edit_revision:String(row[11+offset]||'')};
     });
     state.farms = rawFarms.map(function (farm) {
       var features = Object.assign({}, DEFAULT_FEATURES, farm.features || {});
       return {
-        id:String(farm.id), castle_name:String(farm.castle_name || ('farm-' + farm.id)), login:String(farm.login || ''), password:'', on_off:farm.on_off ? 1 : 0,
+        id:String(farm.id), castle_name:String(farm.castle_name || ('farm-' + farm.id)), on_off:farm.on_off ? 1 : 0,
         resources:Object.assign({food:0,wood:0,steel:0,oil:0}, farm.resources || {}),
         zombie:Object.assign({max_level:40,min_level:35,multiplier:'auto'}, farm.zombie || {}),
-        features:features, shops:Object.assign({arena:[],vip:[]}, farm.shops || {}), resource_snapshot:farm.resource_snapshot, resource_snapshot_at:Number(farm.resource_snapshot_at||0)
+        features:features, shops:Object.assign({arena:[],vip:[]}, farm.shops || {}), resource_snapshot:farm.resource_snapshot, resource_snapshot_at:Number(farm.resource_snapshot_at||0),edit_revision:String(farm.edit_revision||farm.base_revision||'')
       };
     });
     if(state.adminEdit){state.farms=state.farms.filter(function(farm){return farm.id===state.adminFarmId;});}
@@ -231,12 +232,12 @@
   }
 
   function renderHome() {
-    state.screen = 'home'; state.current = null; state.editorTab=null; direction(); language.hidden = editor.hidden = transfer.hidden = true; home.hidden = false; backBtn.hidden = true; saveBtn.parentElement.hidden = false;
-    document.getElementById('eyebrow').textContent = tr('eyebrow'); document.getElementById('title').textContent = tr('title'); saveBtn.textContent = '💾 ' + tr('save');
+    state.screen = 'home'; state.current = null; state.editorTab=null; direction(); language.hidden = editor.hidden = transfer.hidden = true; home.hidden = false; backBtn.hidden = true; saveBtn.parentElement.hidden = true;
+    document.getElementById('eyebrow').textContent = tr('eyebrow'); document.getElementById('title').textContent = tr('title');
     var rows = state.farms.filter(function(f){var q=state.search.toLowerCase();return !q || f.id.toLowerCase().includes(q) || f.castle_name.toLowerCase().includes(q);});
     var helper = state.copyMode ? '<div class="copy-panel">'+esc(state.copyMode==='source'?tr('chooseSource'):tr('chooseTargets'))+(state.source?' <b>'+esc(tr('source'))+': '+esc(state.source.castle_name)+'</b>':'')+'</div>' : '';
     home.innerHTML = '<div class="hero"><div class="region-badge">'+esc(tr('region'))+' · K'+esc(state.kingdom)+'</div><h2>'+esc(tr('title'))+'</h2><p>'+esc(tr('subtitle'))+' · '+esc(tr('telegram'))+' '+esc(payload ? (payload.telegram_id || payload.t) : '—')+'</p></div>'+primaryTabsHtml('castles')+
-      '<div class="toolbar"><input id="search" class="field" value="'+esc(state.search)+'" placeholder="'+esc(tr('search'))+'"><button id="copyBtn" class="small-btn '+(state.copyMode?'active':'')+'">'+esc(state.copyMode?tr('cancel'):tr('copy'))+'</button>'+(state.copyMode==='targets'?'<button id="applyBtn" class="small-btn">'+esc(tr('apply'))+'</button>':'')+'</div>'+helper+
+      '<div class="toolbar"><input id="search" class="field" value="'+esc(state.search)+'" placeholder="'+esc(tr('search'))+'">'+(state.adminEdit?'':'<button id="copyBtn" class="small-btn '+(state.copyMode?'active':'')+'" '+(state.copyPending?'disabled':'')+'>'+esc(state.copyMode?tr('cancel'):tr('copy'))+'</button>'+(state.copyMode==='targets'?'<button id="applyBtn" class="small-btn" '+(state.copyPending?'disabled':'')+'>'+esc(tr('apply'))+'</button>':''))+'</div>'+helper+
       '<div class="castle-list">'+(rows.length?rows.map(castleCard).join(''):'<div class="empty">🏚️<br>'+esc(payload?tr('noFarms'):tr('openTelegram'))+'</div>')+'</div>';
     bindPrimaryTabs(home);
     document.getElementById('search').oninput=function(){
@@ -247,7 +248,7 @@
         card.hidden=!!q && !farm.id.toLowerCase().includes(q) && !farm.castle_name.toLowerCase().includes(q);
       });
     };
-    document.getElementById('copyBtn').onclick=function(){state.copyMode=state.copyMode?null:'source';state.source=null;state.targets={};renderHome();};
+    var copyButton=document.getElementById('copyBtn');if(copyButton){copyButton.onclick=function(){state.copyMode=state.copyMode?null:'source';state.source=null;state.targets={};renderHome();};}
     var apply=document.getElementById('applyBtn'); if(apply){apply.onclick=applyCopy;}
     home.querySelectorAll('[data-farm]').forEach(function(card){card.onclick=function(e){var farm=state.farms.find(function(f){return f.id===card.dataset.farm;});if(e.target.matches('input')){e.stopPropagation();}selectCastle(farm);};});
   }
@@ -261,10 +262,20 @@
     if (state.copyMode==='targets') { if(state.source&&farm.id===state.source.id){return;}state.targets[farm.id]=!state.targets[farm.id];renderHome();return; }
     state.current=farm;state.editorTab=null;renderEditor();
   }
-  function applyCopy() {
+  async function selectionRevision(source,ids){
+    if(!window.crypto||!window.crypto.subtle){throw new Error('digest unavailable');}
+    var selected=[source.id].concat(ids).map(function(id){var farm=state.farms.find(function(row){return row.id===id;});if(!farm||!/^[0-9a-f]{64}$/i.test(farm.edit_revision)){throw new Error('invalid revision');}return [farm.id,farm.edit_revision.toLowerCase()];}).sort(function(a,b){return a[0]<b[0]?-1:(a[0]>b[0]?1:0);});
+    var digest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(selected)));
+    return Array.from(new Uint8Array(digest)).map(function(value){return value.toString(16).padStart(2,'0');}).join('');
+  }
+  async function applyCopy() {
     var ids=Object.keys(state.targets).filter(function(id){return state.targets[id];}); if(!ids.length){setMessage(tr('selectTarget'),'error');return;}
-    ids.forEach(function(id){var farm=state.farms.find(function(f){return f.id===id;});farm.resources=clone(state.source.resources);farm.features.gathering=!!state.source.features.gathering;});
-    state.copyMode=null;state.targets={};setMessage(tr('copied'),'success');renderHome();
+    if(!payload||!state.source||!hasTelegramScope()){setMessage(tr('notAuthorized'),'error');return;}
+    if(!tg){setMessage(tr('openTelegram'),'error');return;}
+    if(state.copyPending||!/^[0-9a-f]{64}$/i.test(state.source.edit_revision)){return;}
+    state.copyPending=true;var apply=document.getElementById('applyBtn');if(apply){apply.disabled=true;}
+    try{var revision=await selectionRevision(state.source,ids);var request={action:'copy_gathering_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,source_farm_id:state.source.id,target_farm_ids:ids,selection_revision:revision};tg.sendData(await compressedSaveRequest(request));setMessage(tr('copyPending'),'success');}
+    catch(_){state.copyPending=false;if(apply){apply.disabled=false;}setMessage(tr('invalid'),'error');}
   }
 
   function selectedTransferFarms(){return Object.keys(state.transferTargets).filter(function(id){return state.transferTargets[id];});}
@@ -301,11 +312,11 @@
   }
 
   function renderEditor() {
-    var f=state.current;state.screen='editor';direction();home.hidden=language.hidden=transfer.hidden=true;editor.hidden=false;backBtn.hidden=false;saveBtn.parentElement.hidden=false;saveBtn.textContent='💾 '+tr('save');
+    var f=state.current;state.screen='editor';direction();home.hidden=language.hidden=transfer.hidden=true;editor.hidden=false;backBtn.hidden=false;saveBtn.parentElement.hidden=false;saveBtn.disabled=!!state.pendingSettings[f.id];saveBtn.textContent=state.pendingSettings[f.id]?tr('saving'):'💾 '+tr('saveFarm');
     document.getElementById('title').textContent=f.castle_name;
-    editor.innerHTML='<div class="editor-head"><div><h2>🏰 '+esc(f.castle_name)+'</h2><div class="castle-id">ID '+esc(f.id)+'</div></div><label class="power-control"><b id="powerLabel">'+esc(f.on_off?tr('on'):tr('off'))+'</b>'+fireSwitch('id="power" type="checkbox"',!!f.on_off)+'</label></div>'+
+    editor.innerHTML='<div class="editor-head"><div><h2>🏰 '+esc(f.castle_name)+'</h2><div class="castle-id">ID '+esc(f.id)+'</div></div><label class="power-control"><b id="powerLabel">'+esc(f.on_off?tr('on'):tr('off'))+'</b>'+fireSwitch('id="power" type="checkbox" '+(state.pendingPower[f.id]?'disabled':''),!!f.on_off)+'</label></div>'+
       editorTabsHtml()+(state.editorTab?editorTabHtml(f):'');
-    document.getElementById('power').onchange=function(){var enabled=this.checked,previous=!!f.on_off;if(!sendFarmEnabled(f,enabled)){this.checked=previous;return;}f.on_off=enabled?1:0;document.getElementById('powerLabel').textContent=tr(enabled?'on':'off');};
+    document.getElementById('power').onchange=function(){var control=this,enabled=control.checked,previous=!!f.on_off;control.checked=previous;control.disabled=true;if(!sendFarmEnabled(f,enabled)){control.disabled=false;return;}state.pendingPower[f.id]=true;};
     editor.querySelectorAll('[data-editor-tab]').forEach(function(button){button.onclick=function(){var tab=button.dataset.editorTab;if(isEditorTabLocked(tab)){requireProtectedAccess();return;}state.editorTab=tab;renderEditor();};});
     editor.querySelectorAll('[data-field]').forEach(function(input){input.oninput=function(){f[input.dataset.field]=input.value;};});
     editor.querySelectorAll('[data-feature]').forEach(function(input){input.onchange=function(){f.features[input.dataset.feature]=input.checked;};});
@@ -317,17 +328,17 @@
   function editorTabsHtml(){var tabs=[['identity','◆',tr('castleSettings')],['functions','⚙',tr('functions')],['gathering','⛏',tr('gather')],['zombie','☣',tr('zombie')],['arena','🏟',tr('arenaStore')],['vip','👑',tr('vipStore')]];return '<nav class="editor-tabs" aria-label="'+esc(tr('castleSettings'))+'">'+tabs.map(function(tab){var locked=isEditorTabLocked(tab[0]);return '<button class="editor-tab '+(state.editorTab===tab[0]?'active ':'')+(locked?'locked':'')+'" type="button" data-editor-tab="'+tab[0]+'" aria-selected="'+String(state.editorTab===tab[0])+'" aria-disabled="'+String(locked)+'">'+(locked?'🔒':tab[1])+'<span>'+esc(tab[2])+'</span></button>';}).join('')+'</nav>';}
   function editorTabHtml(f){if(!isEditorTabAllowed(state.editorTab)){return '';}if(state.editorTab==='identity'){return identityHtml(f);}if(state.editorTab==='gathering'){return resourcesHtml(f);}return '';}
   function protectedPanelHtml(){return '<section class="section-card protected-panel"><span>🔒</span><h3>'+esc(tr('protectedSection'))+'</h3><p>'+esc(tr('notAuthorized'))+'</p></section>';}
-  function identityHtml(f){var credentials=state.adminEdit?'':'<label class="form-row"><span class="label">'+esc(tr('email'))+'</span><input class="field" data-field="login" type="email" value="'+esc(f.login)+'"></label><label class="form-row full"><span class="label">'+esc(tr('password'))+'</span><span class="password-wrap"><input id="password" class="field" data-field="password" type="password" value="" placeholder="'+esc(tr('passwordHint'))+'"><button id="showPass" class="small-btn" type="button">👁</button></span></label>';return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label>'+credentials+'</div></section>';}
+  function identityHtml(f){return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row full"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label></div></section>';}
   function featureToggleHtml(key,label,f){return '<label class="context-feature"><span><small>'+esc(tr('functions'))+'</small><b>'+esc(label)+'</b></span>'+fireSwitch('type="checkbox" data-feature="'+key+'" aria-label="'+esc(label)+'"',!!f.features[key])+'</label>';}
   function resourcesHtml(f){return featureToggleHtml('gathering',featureName('gathering'),f)+'<section class="section-card"><h3 class="section-title"><span>⛏</span>'+esc(tr('gather'))+'</h3><div class="resource-grid">'+['food','wood','steel','oil'].map(function(k){return '<div class="resource"><b>'+esc(tr(k))+'</b><button class="step" data-resource="'+k+'" data-step="-1">−</button><span class="count">'+Number(f.resources[k])+'</span><button class="step" data-resource="'+k+'" data-step="1">+</button></div>';}).join('')+'</div><div class="total"><span>'+esc(tr('total'))+'</span><strong>'+total(f)+' / 5</strong></div></section>';}
   function zombieHtml(f){var options=['auto','10','5','2','1'];return featureToggleHtml('zombie',featureName('zombie'),f)+'<section class="section-card"><h3 class="section-title"><span>☣</span>'+esc(tr('zombie'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('maxLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="max_level" value="'+Number(f.zombie.max_level)+'"></label><label class="form-row"><span class="label">'+esc(tr('minLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="min_level" value="'+Number(f.zombie.min_level)+'"></label><label class="form-row full"><span class="label">'+esc(tr('multiplier'))+'</span><select class="select" data-zombie="multiplier">'+options.map(function(x){return '<option value="'+x+'" '+(String(f.zombie.multiplier)===x?'selected':'')+'>'+(x==='auto'?esc(tr('auto')):(x==='1'?esc(tr('normal')):'×'+x))+'</option>';}).join('')+'</select></label></div></section>';}
   function shopHtml(name,title,f){var feature=name+'_store';return featureToggleHtml(feature,featureName(feature),f)+'<section class="section-card"><h3 class="section-title"><span>🛒</span>'+esc(title)+'</h3><div class="note">'+esc(tr('shopSafety'))+'</div>'+shopList(name,title,f)+'</section>';}
   function shopList(name,title,f){var selected=(f.shops[name]||[]).map(Number);var items=state.catalog[name]||[];return '<h4>'+esc(title)+'</h4><div class="shop-list">'+items.map(function(item){var unlock=item.unlock_level?(name==='vip'?tr('vip')+' ': 'Rank ')+item.unlock_level:'';return '<label class="shop-item">'+fireSwitch('type="checkbox" data-shop="'+name+'" data-item="'+item.item_id+'"',selected.includes(Number(item.item_id)))+'<span><div class="shop-item-name">'+esc(itemName(item))+'</div><div class="shop-item-meta">ID '+item.item_id+' · '+esc(tr('qty'))+' '+item.quantity+(unlock?' · '+esc(unlock):'')+'</div></span><span class="price">'+item.price+' '+esc(name==='arena'?tr('points'):tr(['','gems','oil','food','wood','steel'][item.currency_subtype]||''))+'</span></label>';}).join('')+'</div>';}
 
-  function validate() {
-    for(var i=0;i<state.farms.length;i++){var f=state.farms[i];if((!state.adminEdit&&!f.login)||total(f)>5||Number(f.zombie.min_level)<1||Number(f.zombie.max_level)>100||Number(f.zombie.min_level)>Number(f.zombie.max_level)){return false;}}
-    return true;
+  function validateFarm(f) {
+    return !!f&&/^[0-9a-f]{64}$/i.test(f.edit_revision)&&total(f)<=5&&Number(f.zombie.min_level)>=1&&Number(f.zombie.max_level)<=100&&Number(f.zombie.min_level)<=Number(f.zombie.max_level);
   }
+  function orderForFarm(f){return {farm_id:f.id,base_revision:f.edit_revision,castle_name:f.castle_name,resources:{food:Number(f.resources.food),wood:Number(f.resources.wood),steel:Number(f.resources.steel),oil:Number(f.resources.oil)},gathering:!!f.features.gathering};}
   function base64Url(bytes){
     var binary='',size=0x8000;
     for(var offset=0;offset<bytes.length;offset+=size){binary+=String.fromCharCode.apply(null,bytes.subarray(offset,offset+size));}
@@ -359,17 +370,18 @@
     try{tg.sendData(JSON.stringify({action:'set_language',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner}));}
     catch(_){setMessage(tr('invalid'),'error');saveBtn.disabled=false;}
   }
-  async function saveAll() {
-    setMessage('','');if(!payload||!validate()){setMessage(tr('invalid'),'error');return;}if(!tg){setMessage(tr('openTelegram'),'error');return;}
-    saveBtn.disabled=true;saveBtn.textContent=tr('saving');
-    var orders=state.farms.map(function(f){return {farm_id:f.id,settings:{castle_name:f.castle_name,login:f.login,password:f.password,on_off:f.on_off},resources:f.resources,operation:'gather',zombie:f.zombie,features:f.features,shops:f.shops};});
+  async function saveCurrentFarm() {
+    var farm=state.current;
+    setMessage('','');if(state.screen!=='editor'||!payload||!validateFarm(farm)||state.pendingSettings[farm.id]){setMessage(tr('invalid'),'error');return;}if(!tg){setMessage(tr('openTelegram'),'error');return;}
+    state.pendingSettings[farm.id]=true;saveBtn.disabled=true;saveBtn.textContent=tr('saving');
+    var orders=[orderForFarm(farm)];
     try { var request=addAdminScope({action:'save_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,orders:orders});tg.sendData(await compressedSaveRequest(request));setMessage(tr('pendingConfirmation'),'success'); }
-    catch(_){setMessage(tr('invalid'),'error');saveBtn.disabled=false;saveBtn.textContent='💾 '+tr('save');}
+    catch(_){state.pendingSettings[farm.id]=false;setMessage(tr('invalid'),'error');saveBtn.disabled=false;saveBtn.textContent='💾 '+tr('saveFarm');}
   }
 
   backBtn.onclick=function(){renderHome();};
   document.getElementById('languageBtn').onclick=renderLanguage;
-  saveBtn.onclick=async function(){if(state.screen==='language'){confirmLanguage();return;}await saveAll();};
+  saveBtn.onclick=async function(){if(state.screen==='language'){confirmLanguage();return;}if(state.screen==='editor'){await saveCurrentFarm();}};
   if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
   else if(state.adminEdit&&state.farms.length===1){state.current=state.farms[0];renderEditor();}
   else { renderHome(); }
