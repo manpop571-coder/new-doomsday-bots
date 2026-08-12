@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   'use strict';
 
   var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -149,13 +149,23 @@
     ru:['Ускорение обучения 60 мин.','Продвинутая карта поиска','Случайный набор ресурсов III','Средний набор ресурсов','Карта истребления','Боевой справочник (5 000 опыта)','Защитная ткань','Углеродистая сталь','Углеродистая сталь','Ящик фрагментов обуви','Ящик фрагментов брюк','Чип шлифовки','Ящик фрагментов обуви','Ящик фрагментов брюк','Превосходный ящик обуви','Превосходный ящик брюк','Восстановление выносливости I','Ускорение 5 мин.','Знак элитного героя S','Случайная капсула фрагментов зверя','Стимулятор элитного зверя','Знак легендарного героя S','Фрагмент высокопроизводительного двигателя']
   };
 
-  function decodeData() {
+  async function decodeData() {
     try {
       var raw = new URLSearchParams(location.search).get('data');
       if (!raw) { return null; }
+      var compressed = raw.indexOf('z.') === 0;
+      if (compressed) { raw = raw.slice(2); }
       raw = raw.replace(/-/g, '+').replace(/_/g, '/');
       while (raw.length % 4) { raw += '='; }
-      return JSON.parse(decodeURIComponent(Array.prototype.map.call(atob(raw), function (c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join('')));
+      var binary = atob(raw);
+      if (!compressed) {
+        return JSON.parse(decodeURIComponent(Array.prototype.map.call(binary, function (c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join('')));
+      }
+      if (typeof DecompressionStream !== 'function') { return null; }
+      var bytes = Uint8Array.from(binary, function(c){return c.charCodeAt(0);});
+      var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+      var decoded = await new Response(stream).arrayBuffer();
+      return JSON.parse(new TextDecoder().decode(decoded));
     } catch (_) { return null; }
   }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -165,7 +175,7 @@
     language=chinese[language]||language.split('-',1)[0];
     return LANGS.some(function(x){return x[0]===language;})?language:'en';
   }
-  var payload = decodeData();
+  var payload = await decodeData();
   var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
   if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
     state.lang = normalizeUiLanguage(localStorage.getItem('doomsday-lang') || payload.language || payload.l || 'en');
