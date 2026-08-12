@@ -10,6 +10,12 @@
     ['zh-cn','🇨🇳','简体中文'],['zh-tw','🇹🇼','繁體中文'],['id','🇮🇩','Bahasa Indonesia'],['th','🇹🇭','ภาษาไทย'],
     ['tr','🇹🇷','Türkçe'],['ko','🇰🇷','한국어'],['ja','🇯🇵','日本語'],['vi','🇻🇳','Tiếng Việt']
   ];
+  var LANGUAGE_CONFIRM_TEXT = {
+    ar:'تأكيد اللغة',en:'Confirm language',fr:'Confirmer la langue',de:'Sprache bestätigen',
+    it:'Conferma lingua',es:'Confirmar idioma',pt:'Confirmar idioma',ru:'Подтвердить язык',
+    'zh-cn':'确认语言','zh-tw':'確認語言',id:'Konfirmasi bahasa',th:'ยืนยันภาษา',
+    tr:'Dili onayla',ko:'언어 확인',ja:'言語を確定',vi:'Xác nhận ngôn ngữ'
+  };
   var EN = {
     eyebrow:'CASTLE COMMAND',title:'Doomsday Command',subtitle:'Manage every castle from one control center.',telegram:'Telegram ID',search:'Search by nickname or castle ID',copy:'Copy settings',cancel:'Cancel',apply:'Apply settings',chooseSource:'Choose the source castle.',chooseTargets:'Select one or more target castles.',copied:'Settings copied to the selected castles.',noFarms:'No castles are linked to this Telegram account.',on:'ONLINE',off:'STOPPED',save:'Save all settings',saving:'Saving…',saved:'Settings sent to the bot.',openTelegram:'Open this page from the Telegram bot.',invalid:'Castle data is invalid. Reopen the page from the bot.',back:'Back',identity:'Castle identity',nickname:'Castle nickname',email:'IGG email',password:'New password',passwordHint:'Leave blank to keep the saved password',functions:'Automation functions',gather:'Resource gathering',food:'Food',wood:'Wood',steel:'Steel',oil:'Oil',total:'Total legions',maxFive:'The total cannot exceed 5 legions.',zombie:'Rebel / zombie settings',maxLevel:'Maximum level',minLevel:'Minimum level',multiplier:'Multiplier',auto:'Automatic: ×10, ×5, ×2, then normal',normal:'Normal',shops:'Stores',arenaStore:'Arena Store',vipStore:'VIP Store — resources only',shopSafety:'The bot buys only live selected items. Gems and paid attempt purchases are permanently blocked.',points:'points',vip:'VIP',qty:'Qty',language:'Language',source:'Source',targets:'Targets',selectTarget:'Select target castles first.',transfer:'Transfer resources',transferTarget:'Receiving castle ID',transferHint:'Select the farms below, then enter the amount each selected farm should send.',selectedFarms:'Selected farms',enterAmounts:'Amount from each farm',sendTransfer:'Send resources',confirmTransfer:'Confirm transfer',close:'Close',transferInvalid:'Enter a valid target ID, select at least one farm, and enter a resource amount.',transferSent:'Transfer request sent. The bot will send the detailed report in Telegram.',perFarm:'The same amounts apply to every selected farm.'
   };
@@ -203,9 +209,10 @@
   function direction() { var rtl = state.lang === 'ar'; document.documentElement.dir = rtl ? 'rtl' : 'ltr'; document.documentElement.lang = state.lang; document.body.dataset.lang = state.lang; }
 
   function renderLanguage() {
-    state.screen = 'language'; direction(); home.hidden = editor.hidden = transfer.hidden = true; language.hidden = false; backBtn.hidden = false; saveBtn.parentElement.hidden = true;
-    language.innerHTML = '<h2 class="section-title"><span>🌐</span>'+esc(tr('language'))+'</h2><div class="languages">'+LANGS.map(function(x){return '<button class="language" data-lang="'+x[0]+'">'+x[1]+' '+esc(x[2])+'</button>';}).join('')+'</div>';
-    language.querySelectorAll('[data-lang]').forEach(function(btn){btn.onclick=function(){state.lang=btn.dataset.lang;localStorage.setItem('doomsday-lang',state.lang);renderHome();};});
+    state.screen = 'language'; direction(); home.hidden = editor.hidden = transfer.hidden = true; language.hidden = false; backBtn.hidden = false; saveBtn.parentElement.hidden = false; saveBtn.disabled = false;
+    saveBtn.textContent = '🌐 ' + (LANGUAGE_CONFIRM_TEXT[state.lang] || LANGUAGE_CONFIRM_TEXT.en);
+    language.innerHTML = '<h2 class="section-title"><span>🌐</span>'+esc(tr('language'))+'</h2><div class="languages">'+LANGS.map(function(x){var selected=x[0]===state.lang;return '<button class="language '+(selected?'active':'')+'" type="button" data-lang="'+x[0]+'" aria-pressed="'+String(selected)+'">'+x[1]+' '+esc(x[2])+'</button>';}).join('')+'</div>';
+    language.querySelectorAll('[data-lang]').forEach(function(btn){btn.onclick=function(){state.lang=btn.dataset.lang;localStorage.setItem('doomsday-lang',state.lang);renderLanguage();};});
   }
 
   function renderHome() {
@@ -313,6 +320,14 @@
     catch(_){setMessage(tr('invalid'),'error');return false;}
   }
   function hasTelegramScope(){return state.owner>0&&state.kingdom>0;}
+  function confirmLanguage(){
+    setMessage('','');
+    if(!payload||!hasTelegramScope()){setMessage(tr('notAuthorized'),'error');return;}
+    if(!tg){setMessage(tr('openTelegram'),'error');return;}
+    saveBtn.disabled=true;
+    try{tg.sendData(JSON.stringify({action:'set_language',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner}));}
+    catch(_){setMessage(tr('invalid'),'error');saveBtn.disabled=false;}
+  }
   function saveAll() {
     setMessage('','');if(!payload||!validate()){setMessage(tr('invalid'),'error');return;}if(!tg){setMessage(tr('openTelegram'),'error');return;}
     saveBtn.disabled=true;saveBtn.textContent=tr('saving');
@@ -323,7 +338,7 @@
 
   backBtn.onclick=function(){renderHome();};
   document.getElementById('languageBtn').onclick=renderLanguage;
-  saveBtn.onclick=saveAll;
+  saveBtn.onclick=function(){if(state.screen==='language'){confirmLanguage();return;}saveAll();};
   if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
   else { renderHome(); }
 })();
