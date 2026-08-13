@@ -128,6 +128,17 @@
     ['alliance_gifts','mail_rewards','vip_daily_gift','alliance_technology','territory_rewards','event_rewards'],
     ['police_normal','police_advanced','arena_of_doom','arena_store','vip_store','mysterious_merchant']
   ];
+  // These functions are safe for customers to manage directly.  Combat and
+  // resource-transfer functions remain unavailable in the Mini App.
+  var FUNCTION_TAB_FEATURE_KEYS = [
+    'resource_challenge','daily_missions','training','refinery',
+    'alliance_gifts','mail_rewards','vip_daily_gift','alliance_technology',
+    'territory_rewards','event_rewards','police_normal','police_advanced',
+    'arena_of_doom','mysterious_merchant'
+  ];
+  // Keep the save document aligned with the bot's FEATURE_KEYS contract:
+  // every feature except the two permanently hard-disabled combat features.
+  var SAVE_FEATURE_KEYS = FEATURE_GROUPS.reduce(function(keys,group){return keys.concat(group);},[]).filter(function(key){return key!=='radar'&&key!=='zombie';});
   var FEATURE_MASK_KEYS = ['resource_challenge','radar','zombie','gathering','daily_missions','training','refinery',null,'alliance_gifts','mail_rewards','vip_daily_gift','alliance_technology','territory_rewards','event_rewards','police_normal','police_advanced','arena_of_doom','arena_store','vip_store','mysterious_merchant'];
   var DEFAULT_FEATURES = {};
   FEATURE_GROUPS.forEach(function (group) { group.forEach(function (key) { DEFAULT_FEATURES[key] = !['police_normal','police_advanced','arena_of_doom','arena_store','vip_store'].includes(key); }); });
@@ -218,7 +229,7 @@
   function stockTimeHtml(farm){if(!farm.resource_snapshot_at){return '';}var date=new Date(farm.resource_snapshot_at*1000);return '<div class="stock-time">'+esc(tr('stockUpdated'))+': '+esc(date.toLocaleString(state.lang))+'</div>';}
   function hasProtectedAccess(){return false;}
   function requireProtectedAccess(){if(hasProtectedAccess()){return true;}var notice=tr('notAuthorized');setMessage(notice,'error');if(tg&&typeof tg.showAlert==='function'&&(!tg.isVersionAtLeast||tg.isVersionAtLeast('6.2'))){try{tg.showAlert(notice);}catch(_){}}return false;}
-  function isEditorTabAllowed(tab){return tab==='identity'||tab==='gathering';}
+  function isEditorTabAllowed(tab){return tab==='identity'||tab==='functions'||tab==='gathering'||tab==='arena'||tab==='vip';}
   function isEditorTabLocked(tab){return !isEditorTabAllowed(tab);}
   function primaryTabsHtml(active){var locked=!hasProtectedAccess();return '<nav class="screen-tabs" aria-label="'+esc(tr('title'))+'"><button class="screen-tab '+(active==='castles'?'active':'')+'" type="button" data-primary-tab="castles">🏰 '+esc(tr('castlesTab'))+'</button><button class="screen-tab '+(active==='transfer'?'active ':'')+(locked?'locked':'')+'" type="button" data-primary-tab="transfer" aria-disabled="'+String(locked)+'">'+(locked?'🔒 ':'📦 ')+esc(tr('sendTransfer'))+'</button></nav>';}
   function bindPrimaryTabs(root){root.querySelectorAll('[data-primary-tab]').forEach(function(button){button.onclick=function(){if(button.dataset.primaryTab==='castles'){renderHome();return;}if(requireProtectedAccess()){renderTransfer();}};});}
@@ -326,10 +337,11 @@
     var showPass=document.getElementById('showPass');if(showPass){showPass.onclick=function(){var p=document.getElementById('password');p.type=p.type==='password'?'text':'password';};}
   }
   function editorTabsHtml(){var tabs=[['identity','◆',tr('castleSettings')],['functions','⚙',tr('functions')],['gathering','⛏',tr('gather')],['zombie','☣',tr('zombie')],['arena','🏟',tr('arenaStore')],['vip','👑',tr('vipStore')]];return '<nav class="editor-tabs" aria-label="'+esc(tr('castleSettings'))+'">'+tabs.map(function(tab){var locked=isEditorTabLocked(tab[0]);return '<button class="editor-tab '+(state.editorTab===tab[0]?'active ':'')+(locked?'locked':'')+'" type="button" data-editor-tab="'+tab[0]+'" aria-selected="'+String(state.editorTab===tab[0])+'" aria-disabled="'+String(locked)+'">'+(locked?'🔒':tab[1])+'<span>'+esc(tab[2])+'</span></button>';}).join('')+'</nav>';}
-  function editorTabHtml(f){if(!isEditorTabAllowed(state.editorTab)){return '';}if(state.editorTab==='identity'){return identityHtml(f);}if(state.editorTab==='gathering'){return resourcesHtml(f);}return '';}
+  function editorTabHtml(f){if(!isEditorTabAllowed(state.editorTab)){return '';}if(state.editorTab==='identity'){return identityHtml(f);}if(state.editorTab==='functions'){return functionsHtml(f);}if(state.editorTab==='gathering'){return resourcesHtml(f);}if(state.editorTab==='arena'){return shopHtml('arena',tr('arenaStore'),f);}if(state.editorTab==='vip'){return shopHtml('vip',tr('vipStore'),f);}return '';}
   function protectedPanelHtml(){return '<section class="section-card protected-panel"><span>🔒</span><h3>'+esc(tr('protectedSection'))+'</h3><p>'+esc(tr('notAuthorized'))+'</p></section>';}
   function identityHtml(f){return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row full"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label></div></section>';}
   function featureToggleHtml(key,label,f){return '<label class="context-feature"><span><small>'+esc(tr('functions'))+'</small><b>'+esc(label)+'</b></span>'+fireSwitch('type="checkbox" data-feature="'+key+'" aria-label="'+esc(label)+'"',!!f.features[key])+'</label>';}
+  function functionsHtml(f){return '<section class="section-card"><h3 class="section-title"><span>⚙</span>'+esc(tr('functions'))+'</h3><div class="context-features">'+FUNCTION_TAB_FEATURE_KEYS.map(function(key){return featureToggleHtml(key,featureName(key),f);}).join('')+'</div></section>';}
   function resourcesHtml(f){return featureToggleHtml('gathering',featureName('gathering'),f)+'<section class="section-card"><h3 class="section-title"><span>⛏</span>'+esc(tr('gather'))+'</h3><div class="resource-grid">'+['food','wood','steel','oil'].map(function(k){return '<div class="resource"><b>'+esc(tr(k))+'</b><button class="step" data-resource="'+k+'" data-step="-1">−</button><span class="count">'+Number(f.resources[k])+'</span><button class="step" data-resource="'+k+'" data-step="1">+</button></div>';}).join('')+'</div><div class="total"><span>'+esc(tr('total'))+'</span><strong>'+total(f)+' / 5</strong></div></section>';}
   function zombieHtml(f){var options=['auto','10','5','2','1'];return featureToggleHtml('zombie',featureName('zombie'),f)+'<section class="section-card"><h3 class="section-title"><span>☣</span>'+esc(tr('zombie'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('maxLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="max_level" value="'+Number(f.zombie.max_level)+'"></label><label class="form-row"><span class="label">'+esc(tr('minLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="min_level" value="'+Number(f.zombie.min_level)+'"></label><label class="form-row full"><span class="label">'+esc(tr('multiplier'))+'</span><select class="select" data-zombie="multiplier">'+options.map(function(x){return '<option value="'+x+'" '+(String(f.zombie.multiplier)===x?'selected':'')+'>'+(x==='auto'?esc(tr('auto')):(x==='1'?esc(tr('normal')):'×'+x))+'</option>';}).join('')+'</select></label></div></section>';}
   function shopHtml(name,title,f){var feature=name+'_store';return featureToggleHtml(feature,featureName(feature),f)+'<section class="section-card"><h3 class="section-title"><span>🛒</span>'+esc(title)+'</h3><div class="note">'+esc(tr('shopSafety'))+'</div>'+shopList(name,title,f)+'</section>';}
@@ -338,7 +350,7 @@
   function validateFarm(f) {
     return !!f&&/^[0-9a-f]{64}$/i.test(f.edit_revision)&&total(f)<=5&&Number(f.zombie.min_level)>=1&&Number(f.zombie.max_level)<=100&&Number(f.zombie.min_level)<=Number(f.zombie.max_level);
   }
-  function orderForFarm(f){return {farm_id:f.id,base_revision:f.edit_revision,castle_name:f.castle_name,resources:{food:Number(f.resources.food),wood:Number(f.resources.wood),steel:Number(f.resources.steel),oil:Number(f.resources.oil)},gathering:!!f.features.gathering};}
+  function orderForFarm(f){var features={};SAVE_FEATURE_KEYS.forEach(function(key){features[key]=!!f.features[key];});return {farm_id:f.id,base_revision:f.edit_revision,castle_name:f.castle_name,resources:{food:Number(f.resources.food),wood:Number(f.resources.wood),steel:Number(f.resources.steel),oil:Number(f.resources.oil)},features:features,shops:{arena:(f.shops.arena||[]).map(Number),vip:(f.shops.vip||[]).map(Number)}};}
   function base64Url(bytes){
     var binary='',size=0x8000;
     for(var offset=0;offset<bytes.length;offset+=size){binary+=String.fromCharCode.apply(null,bytes.subarray(offset,offset+size));}
