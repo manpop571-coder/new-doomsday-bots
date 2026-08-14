@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://telegram.org; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="theme-color" content="#100806">
   <title>Doomsday Farm Command</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=20">
+  <link rel="stylesheet" href="./style.css?v=21">
   <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
 </head>
 <body>
@@ -27,12 +26,13 @@
     <section id="homeScreen" hidden></section>
     <section id="editorScreen" hidden></section>
     <section id="transferScreen" hidden></section>
+    <section id="adminAddScreen" hidden></section>
 
     <div class="save-dock">
       <button id="saveBtn" class="gold-btn" type="button"></button>
       <div id="message" role="status" aria-live="polite"></div>
     </div>
   </main>
-  <script src="./app.js?v=25"></script>
+  <script src="./app.js?v=26"></script>
 </body>
 </html>

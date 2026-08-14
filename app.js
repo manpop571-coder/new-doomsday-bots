@@ -188,9 +188,41 @@
     language=chinese[language]||language.split('-',1)[0];
     return LANGS.some(function(x){return x[0]===language;})?language:'en';
   }
+  var ADMIN_ADD_MAX_CASTLES = 20;
+  var ADMIN_ADD_TEXT = {
+    ar:{
+      eyebrow:'إدارة المزارع',title:'إضافة مزارع',intro:'اكتب بيانات حساب IGG مرة واحدة، ثم أضف كل القلاع التابعة له.',
+      email:'بريد IGG',password:'كلمة مرور IGG',castleIds:'معرّفات القلاع',castleId:'معرّف القلعة',addCastle:'إضافة معرّف آخر',removeCastle:'حذف المعرّف',
+      telegram:'معرّف تيليجرام للعميل',subscription:'مدة الاشتراك',daysMode:'عدد الأيام',dateMode:'تاريخ الانتهاء',days:'عدد أيام الاشتراك',endDate:'تاريخ نهاية الاشتراك',
+      inclusive:'{days} يومًا تشمل اليوم — ينتهي الاشتراك في {date}.',datePreview:'الاشتراك فعّال حتى نهاية يوم {date}.',
+      submit:'إضافة المزارع',sending:'جاري إرسال طلب الإضافة…',sent:'تم إرسال الطلب للبوت. انتظر تقرير الإضافة في تيليجرام.',privacy:'كلمة المرور تُرسل مرة واحدة إلى البوت ولا تحفظها هذه الصفحة.',
+      invalid:'راجع البريد وكلمة المرور والمعرّفات ومدة الاشتراك.',duplicate:'لا يمكن تكرار معرّف القلعة.',limit:'الحد الأقصى 20 قلعة في الطلب الواحد.',openTelegram:'افتح النموذج من زر الإضافة داخل بوت تيليجرام.'
+    },
+    en:{
+      eyebrow:'FARM ADMIN',title:'Add farms',intro:'Enter the IGG account once, then add every castle that belongs to it.',
+      email:'IGG email',password:'IGG password',castleIds:'Castle IDs',castleId:'Castle ID',addCastle:'Add another ID',removeCastle:'Remove ID',
+      telegram:'Customer Telegram ID',subscription:'Subscription duration',daysMode:'Number of days',dateMode:'End date',days:'Subscription days',endDate:'Subscription end date',
+      inclusive:'{days} days including today — subscription ends on {date}.',datePreview:'Subscription remains active through {date}.',
+      submit:'Add farms',sending:'Sending add request…',sent:'Request sent. Wait for the result in Telegram.',privacy:'The password is sent once to the bot and is not stored by this page.',
+      invalid:'Check the email, password, IDs, and subscription duration.',duplicate:'A castle ID cannot be repeated.',limit:'A request can contain at most 20 castles.',openTelegram:'Open this form from the Telegram bot add button.'
+    }
+  };
+  function adminText(key){var language=state&&state.lang==='ar'?'ar':'en';return ADMIN_ADD_TEXT[language][key]||key;}
+  function isExactAdminAddLaunch(value){
+    if(!value||Object.getPrototypeOf(value)!==Object.prototype){return false;}
+    if(Object.keys(value).sort().join(',')!=='l,m,n,t,v'){return false;}
+    if(value.v!==1||value.m!=='admin_add'||!Number.isSafeInteger(value.t)||value.t<=0){return false;}
+    if(typeof value.l!=='string'||!LANGS.some(function(row){return row[0]===value.l;})){return false;}
+    return typeof value.n==='string'&&/^[A-Za-z0-9_-]{32,128}$/.test(value.n);
+  }
   var payload = await decodeData();
-  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
-  if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
+  if(typeof history!=='undefined'&&history&&typeof history.replaceState==='function'){
+    try{history.replaceState(null,'',(location.pathname||'./')+(location.hash||''));}catch(_){}
+  }
+  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
+  if (isExactAdminAddLaunch(payload)) {
+    state.adminAdd=true;state.adminAddNonce=payload.n;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);
+  } else if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
     state.lang = normalizeUiLanguage(localStorage.getItem('doomsday-lang') || payload.language || payload.l || 'en');
     state.kingdom = Number(payload.kingdom_id || payload.k || 0);
     state.owner = Number(payload.owner_telegram_id || payload.o || payload.telegram_id || payload.t || 0);
@@ -214,13 +246,14 @@
     });
     if(state.adminEdit){state.farms=state.farms.filter(function(farm){return farm.id===state.adminFarmId;});}
     if(!Number.isInteger(state.kingdom)||state.kingdom<=0||(state.adminEdit&&state.farms.length!==1)){payload=null;state.farms=[];}
-  }
+  } else {payload=null;}
 
-  var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen');
+  var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen'), adminAdd=document.getElementById('adminAddScreen');
   var saveBtn = document.getElementById('saveBtn'), message = document.getElementById('message'), backBtn = document.getElementById('backBtn');
   function tr(key) { return (OV[state.lang] && OV[state.lang][key]) || (TRANSFER_OV[state.lang] && TRANSFER_OV[state.lang][key]) || (REGION_OV[state.lang] && REGION_OV[state.lang][key]) || EN[key] || key; }
   function featureName(key) { return state.lang === 'ar' ? FEATURE_AR[key] : ((FEATURE_OTHER[state.lang] && FEATURE_OTHER[state.lang][key]) || FEATURE_EN[key]); }
   function itemName(item) { var index=ITEM_IDS.indexOf(Number(item.item_id)), names=ITEM_NAMES[state.lang]; return index>=0&&names ? names[index] : item.name; }
+  function safeCatalogInteger(value,max){var number=Number(value);return Number.isSafeInteger(number)&&number>=0&&(max===undefined||number<=max)?number:0;}
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function setMessage(text, kind) { message.textContent = text || ''; message.className = kind || ''; }
   function total(farm) { return ['food','wood','steel','oil'].reduce(function (n,k) { return n + Number(farm.resources[k] || 0); },0); }
@@ -234,6 +267,83 @@
   function primaryTabsHtml(active){var locked=!hasProtectedAccess();return '<nav class="screen-tabs" aria-label="'+esc(tr('title'))+'"><button class="screen-tab '+(active==='castles'?'active':'')+'" type="button" data-primary-tab="castles">🏰 '+esc(tr('castlesTab'))+'</button><button class="screen-tab '+(active==='transfer'?'active ':'')+(locked?'locked':'')+'" type="button" data-primary-tab="transfer" aria-disabled="'+String(locked)+'">'+(locked?'🔒 ':'📦 ')+esc(tr('sendTransfer'))+'</button></nav>';}
   function bindPrimaryTabs(root){root.querySelectorAll('[data-primary-tab]').forEach(function(button){button.onclick=function(){if(button.dataset.primaryTab==='castles'){renderHome();return;}if(requireProtectedAccess()){renderTransfer();}};});}
   function direction() { var rtl = state.lang === 'ar'; document.documentElement.dir = rtl ? 'rtl' : 'ltr'; document.documentElement.lang = state.lang; document.body.dataset.lang = state.lang; }
+
+  function adminUtcIso(date){return date.getUTCFullYear()+'-'+String(date.getUTCMonth()+1).padStart(2,'0')+'-'+String(date.getUTCDate()).padStart(2,'0');}
+  function adminTodayIso(){
+    var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),values={};
+    parts.forEach(function(part){if(part.type!=='literal'){values[part.type]=part.value;}});
+    return values.year+'-'+values.month+'-'+values.day;
+  }
+  function adminInclusiveEndIso(days){var parts=adminTodayIso().split('-').map(Number),end=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]+days-1,12,0,0));return adminUtcIso(end);}
+  function adminValidIsoDate(value){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(value)){return false;}
+    var parts=value.split('-').map(Number);
+    return adminUtcIso(new Date(Date.UTC(parts[0],parts[1]-1,parts[2],12,0,0)))===value&&value>=adminTodayIso();
+  }
+  function clearAdminPassword(){var input=document.getElementById('adminPassword');if(input){input.value='';}}
+  function adminCastleRowsHtml(){
+    var rows=[];
+    for(var index=0;index<ADMIN_ADD_MAX_CASTLES;index++){
+      rows.push('<div class="admin-castle-row" data-castle-row="'+index+'" '+(index?'hidden':'')+'><input class="field" data-castle-id="'+index+'" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="'+esc(adminText('castleId'))+'" aria-label="'+esc(adminText('castleId'))+' '+(index+1)+'">'+(index?'<button class="remove-castle" type="button" data-remove-castle="'+index+'" aria-label="'+esc(adminText('removeCastle'))+'">−</button>':'<span class="castle-row-spacer" aria-hidden="true"></span>')+'</div>');
+    }
+    return rows.join('');
+  }
+  function renderAdminAdd(){
+    state.screen='admin_add';direction();home.hidden=editor.hidden=language.hidden=transfer.hidden=true;adminAdd.hidden=false;backBtn.hidden=true;saveBtn.parentElement.hidden=false;saveBtn.disabled=state.adminAddPending;saveBtn.textContent=state.adminAddPending?adminText('sending'):'＋ '+adminText('submit');
+    document.getElementById('languageBtn').hidden=true;document.getElementById('eyebrow').textContent=adminText('eyebrow');document.getElementById('title').textContent=adminText('title');
+    var today=adminTodayIso();
+    adminAdd.innerHTML='<div class="admin-add-hero"><span class="admin-add-icon">＋</span><div><h2>'+esc(adminText('title'))+'</h2><p>'+esc(adminText('intro'))+'</p></div></div>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>◆</span>'+esc(adminText('email'))+'</h3><input id="adminEmail" class="field" type="email" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="200" placeholder="name@example.com"></section>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>●</span>'+esc(adminText('password'))+'</h3><input id="adminPassword" class="field" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" maxlength="200" placeholder="••••••••"><p class="admin-privacy">🔒 '+esc(adminText('privacy'))+'</p></section>'+
+      '<section class="section-card admin-add-card"><div class="admin-section-head"><h3 class="section-title"><span>🏰</span>'+esc(adminText('castleIds'))+'</h3><button id="addCastleId" class="add-castle" type="button" aria-label="'+esc(adminText('addCastle'))+'">＋</button></div><div id="adminCastleRows" class="admin-castle-rows">'+adminCastleRowsHtml()+'</div><p class="admin-inline-help">'+esc(adminText('addCastle'))+'</p></section>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>✈</span>'+esc(adminText('telegram'))+'</h3><input id="adminTelegramId" class="field" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Telegram ID"></section>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>▣</span>'+esc(adminText('subscription'))+'</h3><div class="subscription-modes"><label class="mode-option"><input type="radio" name="admin-subscription" data-subscription-mode="days" checked><span>'+esc(adminText('daysMode'))+'</span></label><label class="mode-option"><input type="radio" name="admin-subscription" data-subscription-mode="end_date"><span>'+esc(adminText('dateMode'))+'</span></label></div><label id="subscriptionDaysRow" class="form-row"><span class="label">'+esc(adminText('days'))+'</span><input id="subscriptionDays" class="field" type="number" inputmode="numeric" min="1" max="3650" step="1" value="31"></label><label id="subscriptionDateRow" class="form-row" hidden><span class="label">'+esc(adminText('endDate'))+'</span><input id="subscriptionEndDate" class="field" type="date" min="'+today+'" value="'+today+'"></label><div id="subscriptionPreview" class="subscription-preview" role="status"></div></section>';
+    bindAdminAdd();updateAdminSubscription();
+  }
+  function adminNodes(selector){return Array.prototype.slice.call(adminAdd.querySelectorAll(selector));}
+  function adminCastleInput(index){return adminNodes('[data-castle-id]').find(function(input){return input.dataset.castleId===String(index);});}
+  function visibleAdminCastleRows(){return adminNodes('[data-castle-row]').filter(function(row){return !row.hidden;});}
+  function updateAdminCastleControls(){var add=document.getElementById('addCastleId');if(add){add.disabled=visibleAdminCastleRows().length>=ADMIN_ADD_MAX_CASTLES;}}
+  function bindAdminAdd(){
+    adminNodes('[data-castle-id]').forEach(function(input){input.oninput=function(){this.value=this.value.replace(/\D/g,'').slice(0,20);};});
+    document.getElementById('adminTelegramId').oninput=function(){this.value=this.value.replace(/\D/g,'').slice(0,20);};
+    document.getElementById('addCastleId').onclick=function(){var row=adminNodes('[data-castle-row]').find(function(item){return item.hidden;});if(!row){setMessage(adminText('limit'),'error');return;}row.hidden=false;var input=adminCastleInput(row.dataset.castleRow);if(input&&typeof input.focus==='function'){input.focus();}updateAdminCastleControls();};
+    adminNodes('[data-remove-castle]').forEach(function(button){button.onclick=function(){var row=adminNodes('[data-castle-row]').find(function(item){return item.dataset.castleRow===button.dataset.removeCastle;});if(!row){return;}var input=adminCastleInput(button.dataset.removeCastle);if(input){input.value='';}row.hidden=true;updateAdminCastleControls();};});
+    adminNodes('[data-subscription-mode]').forEach(function(input){input.onchange=updateAdminSubscription;});
+    document.getElementById('subscriptionDays').oninput=updateAdminSubscription;
+    document.getElementById('subscriptionEndDate').oninput=updateAdminSubscription;
+    updateAdminCastleControls();
+  }
+  function selectedAdminSubscriptionMode(){var selected=adminNodes('[data-subscription-mode]').find(function(input){return input.checked;});return selected?selected.dataset.subscriptionMode:'days';}
+  function updateAdminSubscription(){
+    var mode=selectedAdminSubscriptionMode(),daysRow=document.getElementById('subscriptionDaysRow'),dateRow=document.getElementById('subscriptionDateRow'),preview=document.getElementById('subscriptionPreview');
+    daysRow.hidden=mode!=='days';dateRow.hidden=mode!=='end_date';
+    if(mode==='days'){var days=Number(document.getElementById('subscriptionDays').value);preview.textContent=Number.isInteger(days)&&days>=1&&days<=3650?adminText('inclusive').replace('{days}',String(days)).replace('{date}',adminInclusiveEndIso(days)):'';}
+    else {var endDate=document.getElementById('subscriptionEndDate').value;preview.textContent=adminValidIsoDate(endDate)?adminText('datePreview').replace('{date}',endDate):'';}
+  }
+  function submitAdminAdd(){
+    if(!state.adminAdd||state.adminAddPending){return;}
+    setMessage('','');
+    if(!tg){setMessage(adminText('openTelegram'),'error');return;}
+    var email=String(document.getElementById('adminEmail').value||'').trim();
+    var passwordInput=document.getElementById('adminPassword'),password=String(passwordInput.value||'');
+    var telegramValue=String(document.getElementById('adminTelegramId').value||'').trim();
+    var castleIds=visibleAdminCastleRows().map(function(row){var input=adminCastleInput(row.dataset.castleRow);return String(input?input.value:'').trim();}).filter(Boolean);
+    var controlCharacters=/[\u0000-\u001f\u007f]/;
+    var emailValid=email.length<=200&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&!controlCharacters.test(email),passwordValid=password.length>=1&&password.length<=200&&!controlCharacters.test(password);
+    var telegramId=Number(telegramValue),idsValid=castleIds.length>=1&&castleIds.length<=ADMIN_ADD_MAX_CASTLES&&castleIds.every(function(id){return /^[1-9]\d{0,19}$/.test(id);});
+    if(new Set(castleIds).size!==castleIds.length){setMessage(adminText('duplicate'),'error');return;}
+    var mode=selectedAdminSubscriptionMode(),subscription=null;
+    if(mode==='days'){var days=Number(document.getElementById('subscriptionDays').value);if(Number.isInteger(days)&&days>=1&&days<=3650){subscription={mode:'days',days:days};}}
+    else {var endDate=String(document.getElementById('subscriptionEndDate').value||'');if(adminValidIsoDate(endDate)){subscription={mode:'end_date',end_date:endDate};}}
+    if(!emailValid||!passwordValid||!idsValid||!/^[1-9]\d{0,19}$/.test(telegramValue)||!Number.isSafeInteger(telegramId)||telegramId<=0||!subscription){setMessage(adminText('invalid'),'error');return;}
+    var wire=JSON.stringify({action:'admin_add_batch',nonce:state.adminAddNonce,email:email,password:password,castle_ids:castleIds,telegram_id:telegramId,subscription:subscription});
+    password='';passwordInput.value='';
+    if(new TextEncoder().encode(wire).length>4096){wire='';setMessage(adminText('limit'),'error');return;}
+    state.adminAddPending=true;saveBtn.disabled=true;saveBtn.textContent=adminText('sending');
+    try{tg.sendData(wire);wire='';state.adminAddNonce='';setMessage(adminText('sent'),'success');}
+    catch(_){wire='';state.adminAddPending=false;saveBtn.disabled=false;saveBtn.textContent='＋ '+adminText('submit');setMessage(adminText('invalid'),'error');}
+  }
 
   function renderLanguage() {
     state.screen = 'language'; direction(); home.hidden = editor.hidden = transfer.hidden = true; language.hidden = false; backBtn.hidden = false; saveBtn.parentElement.hidden = false; saveBtn.disabled = false;
@@ -345,7 +455,7 @@
   function resourcesHtml(f){return featureToggleHtml('gathering',featureName('gathering'),f)+'<section class="section-card"><h3 class="section-title"><span>⛏</span>'+esc(tr('gather'))+'</h3><div class="resource-grid">'+['food','wood','steel','oil'].map(function(k){return '<div class="resource"><b>'+esc(tr(k))+'</b><button class="step" data-resource="'+k+'" data-step="-1">−</button><span class="count">'+Number(f.resources[k])+'</span><button class="step" data-resource="'+k+'" data-step="1">+</button></div>';}).join('')+'</div><div class="total"><span>'+esc(tr('total'))+'</span><strong>'+total(f)+' / 5</strong></div></section>';}
   function zombieHtml(f){var options=['auto','10','5','2','1'];return featureToggleHtml('zombie',featureName('zombie'),f)+'<section class="section-card"><h3 class="section-title"><span>☣</span>'+esc(tr('zombie'))+'</h3><div class="form-grid"><label class="form-row"><span class="label">'+esc(tr('maxLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="max_level" value="'+Number(f.zombie.max_level)+'"></label><label class="form-row"><span class="label">'+esc(tr('minLevel'))+'</span><input class="field" type="number" min="1" max="100" data-zombie="min_level" value="'+Number(f.zombie.min_level)+'"></label><label class="form-row full"><span class="label">'+esc(tr('multiplier'))+'</span><select class="select" data-zombie="multiplier">'+options.map(function(x){return '<option value="'+x+'" '+(String(f.zombie.multiplier)===x?'selected':'')+'>'+(x==='auto'?esc(tr('auto')):(x==='1'?esc(tr('normal')):'×'+x))+'</option>';}).join('')+'</select></label></div></section>';}
   function shopHtml(name,title,f){var feature=name+'_store';return featureToggleHtml(feature,featureName(feature),f)+'<section class="section-card"><h3 class="section-title"><span>🛒</span>'+esc(title)+'</h3><div class="note">'+esc(tr('shopSafety'))+'</div>'+shopList(name,title,f)+'</section>';}
-  function shopList(name,title,f){var selected=(f.shops[name]||[]).map(Number);var items=state.catalog[name]||[];return '<h4>'+esc(title)+'</h4><div class="shop-list">'+items.map(function(item){var unlock=item.unlock_level?(name==='vip'?tr('vip')+' ': 'Rank ')+item.unlock_level:'';return '<label class="shop-item">'+fireSwitch('type="checkbox" data-shop="'+name+'" data-item="'+item.item_id+'"',selected.includes(Number(item.item_id)))+'<span><div class="shop-item-name">'+esc(itemName(item))+'</div><div class="shop-item-meta">ID '+item.item_id+' · '+esc(tr('qty'))+' '+item.quantity+(unlock?' · '+esc(unlock):'')+'</div></span><span class="price">'+item.price+' '+esc(name==='arena'?tr('points'):tr(['','gems','oil','food','wood','steel'][item.currency_subtype]||''))+'</span></label>';}).join('')+'</div>';}
+  function shopList(name,title,f){var selected=(f.shops[name]||[]).map(Number),rawItems=state.catalog[name],items=Array.isArray(rawItems)?rawItems:[];return '<h4>'+esc(title)+'</h4><div class="shop-list">'+items.map(function(item){var itemId=safeCatalogInteger(item&&item.item_id),quantity=safeCatalogInteger(item&&item.quantity),price=safeCatalogInteger(item&&item.price),unlockLevel=safeCatalogInteger(item&&item.unlock_level),currencySubtype=safeCatalogInteger(item&&item.currency_subtype,5);var unlock=unlockLevel?(name==='vip'?tr('vip')+' ': 'Rank ')+unlockLevel:'';return '<label class="shop-item">'+fireSwitch('type="checkbox" data-shop="'+esc(name)+'" data-item="'+esc(itemId)+'"',selected.includes(itemId))+'<span><div class="shop-item-name">'+esc(itemName(item||{}))+'</div><div class="shop-item-meta">ID '+esc(itemId)+' · '+esc(tr('qty'))+' '+esc(quantity)+(unlock?' · '+esc(unlock):'')+'</div></span><span class="price">'+esc(price)+' '+esc(name==='arena'?tr('points'):tr(['','gems','oil','food','wood','steel'][currencySubtype]||''))+'</span></label>';}).join('')+'</div>';}
 
   function validateFarm(f) {
     return !!f&&/^[0-9a-f]{64}$/i.test(f.edit_revision)&&total(f)<=5&&Number(f.zombie.min_level)>=1&&Number(f.zombie.max_level)<=100&&Number(f.zombie.min_level)<=Number(f.zombie.max_level);
@@ -393,8 +503,10 @@
 
   backBtn.onclick=function(){renderHome();};
   document.getElementById('languageBtn').onclick=renderLanguage;
-  saveBtn.onclick=async function(){if(state.screen==='language'){confirmLanguage();return;}if(state.screen==='editor'){await saveCurrentFarm();}};
-  if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
+  saveBtn.onclick=async function(){if(state.screen==='admin_add'){submitAdminAdd();return;}if(state.screen==='language'){confirmLanguage();return;}if(state.screen==='editor'){await saveCurrentFarm();}};
+  if(typeof window.addEventListener==='function'){window.addEventListener('pagehide',clearAdminPassword);}
+  if (state.adminAdd) { renderAdminAdd(); }
+  else if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
   else if(state.adminEdit&&state.farms.length===1){state.current=state.farms[0];renderEditor();}
   else { renderHome(); }
 })();
