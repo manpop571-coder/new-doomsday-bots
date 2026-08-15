@@ -219,7 +219,16 @@
       invalid:'Check the email, password, IDs, and subscription duration.',duplicate:'A castle ID cannot be repeated.',limit:'A request can contain at most 20 castles.',openTelegram:'Open this form from the Telegram bot add button.'
     }
   };
+  var ADMIN_EDIT_TEXT = {
+    ar:{
+      eyebrow:'إدارة القلاع',title:'تعديل بيانات القلعة',intro:'راجع البيانات وأرسل كل التغييرات في طلب واحد.',oldCastle:'القلعة الحالية',email:'بريد IGG الجديد',emailHint:'اتركه فارغًا للإبقاء على البريد الحالي',currentEmail:'البريد الحالي',password:'كلمة مرور IGG الجديدة',passwordHint:'اتركها فارغة للإبقاء على كلمة المرور الحالية',newCastle:'معرّف القلعة الجديد',telegram:'معرّف تيليجرام',subscription:'تاريخ نهاية الاشتراك',enabled:'تشغيل القلعة',submit:'حفظ التعديل',sending:'جاري إرسال التعديل…',sent:'تم إرسال طلب التعديل. انتظر تأكيد البوت في تيليجرام.',invalid:'راجع البريد والمعرّفات وتاريخ الاشتراك.',privacy:'لا تعرض الصفحة بيانات الدخول القديمة، وكلمة المرور الجديدة لا تُحفظ فيها.',settingsNote:'إعدادات الدوال تظل في زر إعدادات القلعة المنفصل.'
+    },
+    en:{
+      eyebrow:'CASTLE ADMIN',title:'Edit castle account',intro:'Review the account and send all changes in one request.',oldCastle:'Current castle',email:'New IGG email',emailHint:'Leave blank to keep the current email',currentEmail:'Current email',password:'New IGG password',passwordHint:'Leave blank to keep the current password',newCastle:'New castle ID',telegram:'Telegram ID',subscription:'Subscription end date',enabled:'Castle enabled',submit:'Save changes',sending:'Sending changes…',sent:'Edit request sent. Wait for confirmation from the bot.',invalid:'Check the email, IDs, and subscription date.',privacy:'Old credentials are never shown. The new password is not stored by this page.',settingsNote:'Automation settings remain available from the separate castle-settings button.'
+    }
+  };
   function adminText(key){var language=state&&state.lang==='ar'?'ar':'en';return ADMIN_ADD_TEXT[language][key]||key;}
+  function adminEditText(key){var language=state&&state.lang==='ar'?'ar':'en';return ADMIN_EDIT_TEXT[language][key]||key;}
   function isExactAdminAddLaunch(value){
     if(!value||Object.getPrototypeOf(value)!==Object.prototype){return false;}
     if(Object.keys(value).sort().join(',')!=='l,m,n,t,v'){return false;}
@@ -227,12 +236,27 @@
     if(typeof value.l!=='string'||!LANGS.some(function(row){return row[0]===value.l;})){return false;}
     return typeof value.n==='string'&&/^[A-Za-z0-9_-]{32,128}$/.test(value.n);
   }
+  function isExactAdminClientEditLaunch(value){
+    if(!value||Object.getPrototypeOf(value)!==Object.prototype){return false;}
+    if(Object.keys(value).sort().join(',')!=='c,l,m,r,t,v,x'){return false;}
+    if(value.v!==1||value.m!=='admin_edit_client'||!Number.isSafeInteger(value.t)||value.t<=0){return false;}
+    if(typeof value.l!=='string'||!LANGS.some(function(row){return row[0]===value.l;})){return false;}
+    if(typeof value.x!=='string'||!/^[1-9]\d{0,19}$/.test(value.x)){return false;}
+    if(typeof value.r!=='string'||!value.r.length||value.r.length>128){return false;}
+    var current=value.c;
+    if(!current||Object.getPrototypeOf(current)!==Object.prototype||Object.keys(current).sort().join(',')!=='email_mask,enabled,subscription_end,subscription_start,telegram_id'){return false;}
+    if(typeof current.email_mask!=='string'||current.email_mask.length>200||/[\u0000-\u001f\u007f]/.test(current.email_mask)){return false;}
+    if(!Number.isSafeInteger(current.telegram_id)||current.telegram_id<=0||typeof current.enabled!=='boolean'){return false;}
+    return [current.subscription_start,current.subscription_end].every(function(date){return date===null||date===''||(typeof date==='string'&&adminValidIsoDateValue(date));});
+  }
   var payload = await decodeData();
   if(typeof history!=='undefined'&&history&&typeof history.replaceState==='function'){
     try{history.replaceState(null,'',(location.pathname||'./')+(location.hash||''));}catch(_){}
   }
-  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
-  if (isExactAdminAddLaunch(payload)) {
+  var state = {farms:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, adminClientEdit:false, adminClientFarmId:'', adminClientRevision:'', adminClientCurrent:null, adminClientEditPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, search:''};
+  if (isExactAdminClientEditLaunch(payload)) {
+    state.adminClientEdit=true;state.adminClientFarmId=payload.x;state.adminClientRevision=payload.r;state.adminClientCurrent=clone(payload.c);state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);
+  } else if (isExactAdminAddLaunch(payload)) {
     state.adminAdd=true;state.adminAddNonce=payload.n;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);
   } else if (payload && (Array.isArray(payload.farms) || Array.isArray(payload.f))) {
     state.lang = normalizeUiLanguage(localStorage.getItem('doomsday-lang') || payload.language || payload.l || 'en');
@@ -259,7 +283,7 @@
     if(!Number.isInteger(state.kingdom)||state.kingdom<=0||(state.adminEdit&&state.farms.length!==1)){payload=null;state.farms=[];}
   } else {payload=null;}
 
-  var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen'), adminAdd=document.getElementById('adminAddScreen');
+  var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen'), adminAdd=document.getElementById('adminAddScreen'), adminEdit=document.getElementById('adminEditScreen');
   var saveBtn = document.getElementById('saveBtn'), message = document.getElementById('message'), backBtn = document.getElementById('backBtn');
   function tr(key) { return (OV[state.lang] && OV[state.lang][key]) || (TRANSFER_OV[state.lang] && TRANSFER_OV[state.lang][key]) || (REGION_OV[state.lang] && REGION_OV[state.lang][key]) || EN[key] || key; }
   function featureName(key) { return state.lang === 'ar' ? FEATURE_AR[key] : ((FEATURE_OTHER[state.lang] && FEATURE_OTHER[state.lang][key]) || FEATURE_EN[key]); }
@@ -283,12 +307,15 @@
     return values.year+'-'+values.month+'-'+values.day;
   }
   function adminInclusiveEndIso(days){var parts=adminTodayIso().split('-').map(Number),end=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]+days-1,12,0,0));return adminUtcIso(end);}
-  function adminValidIsoDate(value){
+  function adminValidIsoDateValue(value){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(value)){return false;}
     var parts=value.split('-').map(Number);
-    return adminUtcIso(new Date(Date.UTC(parts[0],parts[1]-1,parts[2],12,0,0)))===value&&value>=adminTodayIso();
+    return adminUtcIso(new Date(Date.UTC(parts[0],parts[1]-1,parts[2],12,0,0)))===value;
   }
-  function clearAdminPassword(){var input=document.getElementById('adminPassword');if(input){input.value='';}}
+  function adminValidIsoDate(value){
+    return adminValidIsoDateValue(value)&&value>=adminTodayIso();
+  }
+  function clearAdminPassword(){['adminPassword','adminEditPassword'].forEach(function(id){var input=document.getElementById(id);if(input){input.value='';}});}
   function adminCastleRowsHtml(){
     var rows=[];
     for(var index=0;index<ADMIN_ADD_MAX_CASTLES;index++){
@@ -351,6 +378,36 @@
     state.adminAddPending=true;saveBtn.disabled=true;saveBtn.textContent=adminText('sending');
     try{tg.sendData(wire);wire='';state.adminAddNonce='';setMessage(adminText('sent'),'success');}
     catch(_){wire='';state.adminAddPending=false;saveBtn.disabled=false;saveBtn.textContent='＋ '+adminText('submit');setMessage(adminText('invalid'),'error');}
+  }
+
+  function renderAdminClientEdit(){
+    var current=state.adminClientCurrent;
+    state.screen='admin_client_edit';direction();home.hidden=editor.hidden=language.hidden=transfer.hidden=adminAdd.hidden=true;adminEdit.hidden=false;backBtn.hidden=true;saveBtn.parentElement.hidden=false;saveBtn.disabled=state.adminClientEditPending;saveBtn.textContent=state.adminClientEditPending?adminEditText('sending'):'✎ '+adminEditText('submit');
+    document.getElementById('languageBtn').hidden=true;document.getElementById('eyebrow').textContent=adminEditText('eyebrow');document.getElementById('title').textContent=adminEditText('title');
+    var subscriptionEnd=typeof current.subscription_end==='string'?current.subscription_end:'';
+    adminEdit.innerHTML='<div class="admin-add-hero"><span class="admin-add-icon">✎</span><div><h2>'+esc(adminEditText('title'))+'</h2><p>'+esc(adminEditText('intro'))+'</p></div></div>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>🏰</span>'+esc(adminEditText('oldCastle'))+'</h3><div class="admin-edit-current">ID '+esc(state.adminClientFarmId)+'</div></section>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>◆</span>'+esc(adminEditText('email'))+'</h3><div class="admin-inline-help">'+esc(adminEditText('currentEmail'))+': '+esc(current.email_mask||'—')+'</div><input id="adminEditEmail" class="field" type="email" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="200" placeholder="'+esc(adminEditText('emailHint'))+'"></section>'+
+      '<section class="section-card admin-add-card"><h3 class="section-title"><span>●</span>'+esc(adminEditText('password'))+'</h3><input id="adminEditPassword" class="field" type="password" autocomplete="new-password" autocapitalize="none" spellcheck="false" maxlength="200" placeholder="'+esc(adminEditText('passwordHint'))+'"><p class="admin-privacy">🔒 '+esc(adminEditText('privacy'))+'</p></section>'+
+      '<section class="section-card admin-add-card"><div class="form-grid"><label class="form-row"><span class="label">'+esc(adminEditText('newCastle'))+'</span><input id="adminEditCastleId" class="field" inputmode="numeric" autocomplete="off" maxlength="20" value="'+esc(state.adminClientFarmId)+'"></label><label class="form-row"><span class="label">'+esc(adminEditText('telegram'))+'</span><input id="adminEditTelegramId" class="field" inputmode="numeric" autocomplete="off" maxlength="20" value="'+esc(current.telegram_id)+'"></label><label class="form-row"><span class="label">'+esc(adminEditText('subscription'))+'</span><input id="adminEditSubscriptionEnd" class="field" type="date" value="'+esc(subscriptionEnd)+'"></label><label class="check-card"><span>'+esc(adminEditText('enabled'))+'</span>'+fireSwitch('id="adminEditEnabled" type="checkbox"',current.enabled)+'</label></div></section>'+
+      '<p class="admin-inline-help">'+esc(adminEditText('settingsNote'))+'</p>';
+    ['adminEditCastleId','adminEditTelegramId'].forEach(function(id){document.getElementById(id).oninput=function(){this.value=this.value.replace(/\D/g,'').slice(0,20);};});
+  }
+
+  function submitAdminClientEdit(){
+    if(!state.adminClientEdit||state.adminClientEditPending){return;}
+    setMessage('','');if(!tg){setMessage(adminEditText('invalid'),'error');return;}
+    var current=state.adminClientCurrent,emailInput=document.getElementById('adminEditEmail'),passwordInput=document.getElementById('adminEditPassword');
+    var email=String(emailInput.value||'').trim(),password=String(passwordInput.value||''),castleId=String(document.getElementById('adminEditCastleId').value||'').trim(),telegramValue=String(document.getElementById('adminEditTelegramId').value||'').trim(),subscriptionEnd=String(document.getElementById('adminEditSubscriptionEnd').value||'').trim(),enabled=!!document.getElementById('adminEditEnabled').checked;
+    var controlCharacters=/[\u0000-\u001f\u007f]/,emailValid=!email||(email.length<=200&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&!controlCharacters.test(email)),passwordValid=!password||(password.length<=200&&!controlCharacters.test(password));
+    var telegramId=Number(telegramValue),idsValid=/^[1-9]\d{0,19}$/.test(castleId)&&/^[1-9]\d{0,19}$/.test(telegramValue)&&Number.isSafeInteger(telegramId)&&telegramId>0,dateValid=!subscriptionEnd||(adminValidIsoDateValue(subscriptionEnd)&&(!current.subscription_start||subscriptionEnd>=current.subscription_start));
+    if(!emailValid||!passwordValid||!idsValid||!dateValid){password='';passwordInput.value='';setMessage(adminEditText('invalid'),'error');return;}
+    var wire=JSON.stringify({action:'admin_edit_client',farm_id:state.adminClientFarmId,base_revision:state.adminClientRevision,email:email||null,password:password||null,new_castle_id:castleId===state.adminClientFarmId?null:castleId,telegram_id:telegramId===current.telegram_id?null:telegramId,subscription_end:!subscriptionEnd||subscriptionEnd===(current.subscription_end||'')?null:subscriptionEnd,enabled:enabled===current.enabled?null:enabled});
+    password='';passwordInput.value='';
+    if(new TextEncoder().encode(wire).length>4096){wire='';setMessage(adminEditText('invalid'),'error');return;}
+    state.adminClientEditPending=true;saveBtn.disabled=true;saveBtn.textContent=adminEditText('sending');
+    try{tg.sendData(wire);wire='';state.adminClientRevision='';setMessage(adminEditText('sent'),'success');}
+    catch(_){wire='';state.adminClientEditPending=false;saveBtn.disabled=false;saveBtn.textContent='✎ '+adminEditText('submit');setMessage(adminEditText('invalid'),'error');}
   }
 
   function renderLanguage() {
@@ -507,9 +564,10 @@
 
   backBtn.onclick=function(){renderHome();};
   document.getElementById('languageBtn').onclick=renderLanguage;
-  saveBtn.onclick=async function(){if(state.screen==='admin_add'){submitAdminAdd();return;}if(state.screen==='language'){confirmLanguage();return;}if(state.screen==='editor'){await saveCurrentFarm();}};
+  saveBtn.onclick=async function(){if(state.screen==='admin_client_edit'){submitAdminClientEdit();return;}if(state.screen==='admin_add'){submitAdminAdd();return;}if(state.screen==='language'){confirmLanguage();return;}if(state.screen==='editor'){await saveCurrentFarm();}};
   if(typeof window.addEventListener==='function'){window.addEventListener('pagehide',clearAdminPassword);}
-  if (state.adminAdd) { renderAdminAdd(); }
+  if (state.adminClientEdit) { renderAdminClientEdit(); }
+  else if (state.adminAdd) { renderAdminAdd(); }
   else if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
   else if(state.adminEdit&&state.farms.length===1){state.current=state.farms[0];renderEditor();}
   else { renderHome(); }
