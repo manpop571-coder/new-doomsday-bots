@@ -82,6 +82,25 @@
   // target shared by the selected farms.
   Object.assign(EN,{pendingConfirmation:'Request sent. Wait for confirmation from the bot.',saveFarm:'Save castle settings',copyPending:'Copy request sent. Wait for confirmation from the bot.'});
   Object.assign(OV.ar,{pendingConfirmation:'تم إرسال الطلب، انتظر تأكيد البوت.',saveFarm:'حفظ إعدادات القلعة',copyPending:'تم إرسال طلب النسخ، انتظر تأكيد البوت.'});
+  var GATHER_INTERVAL_OV={
+    ar:['موعد فحص الجمع','كل ساعة','كل ساعتين','كل 3 ساعات','كل 4 ساعات','تدخل القلعة في بداية الموعد، تفحص الفيالق وترسل المتاح ثم تغادر.'],
+    en:['Gathering check interval','Every hour','Every 2 hours','Every 3 hours','Every 4 hours','The castle enters at the scheduled hour, sends available gathering legions, then exits.'],
+    fr:['Fréquence de collecte','Chaque heure','Toutes les 2 heures','Toutes les 3 heures','Toutes les 4 heures','Le château se connecte à l’heure prévue, envoie les légions disponibles puis se déconnecte.'],
+    de:['Sammel-Prüfintervall','Jede Stunde','Alle 2 Stunden','Alle 3 Stunden','Alle 4 Stunden','Die Burg meldet sich zur geplanten Stunde an, sendet freie Legionen und meldet sich ab.'],
+    it:['Intervallo controllo raccolta','Ogni ora','Ogni 2 ore','Ogni 3 ore','Ogni 4 ore','Il castello entra all’ora prevista, invia le legioni disponibili ed esce.'],
+    es:['Intervalo de recolección','Cada hora','Cada 2 horas','Cada 3 horas','Cada 4 horas','El castillo entra a la hora prevista, envía las legiones disponibles y sale.'],
+    pt:['Intervalo de coleta','A cada hora','A cada 2 horas','A cada 3 horas','A cada 4 horas','O castelo entra no horário previsto, envia as legiões disponíveis e sai.'],
+    ru:['Интервал проверки сбора','Каждый час','Каждые 2 часа','Каждые 3 часа','Каждые 4 часа','Замок входит по расписанию, отправляет свободные легионы и выходит.'],
+    'zh-cn':['采集检查间隔','每小时','每 2 小时','每 3 小时','每 4 小时','城堡在计划时间登录，派出可用采集军团，然后退出。'],
+    'zh-tw':['採集檢查間隔','每小時','每 2 小時','每 3 小時','每 4 小時','城堡在排程時間登入，派出可用採集軍團，然後退出。'],
+    id:['Interval pemeriksaan pengumpulan','Setiap jam','Setiap 2 jam','Setiap 3 jam','Setiap 4 jam','Kastel masuk sesuai jadwal, mengirim legiun yang tersedia, lalu keluar.'],
+    th:['ช่วงเวลาตรวจการรวบรวม','ทุกชั่วโมง','ทุก 2 ชั่วโมง','ทุก 3 ชั่วโมง','ทุก 4 ชั่วโมง','ปราสาทจะเข้าในเวลาที่กำหนด ส่งกองทัพที่ว่าง แล้วออก'],
+    tr:['Toplama kontrol aralığı','Her saat','Her 2 saatte','Her 3 saatte','Her 4 saatte','Kale planlanan saatte girer, uygun lejyonları gönderir ve çıkar.'],
+    ko:['채집 확인 간격','매시간','2시간마다','3시간마다','4시간마다','성은 예정된 시간에 접속해 사용 가능한 군단을 보내고 종료합니다.'],
+    ja:['採集確認の間隔','毎時','2時間ごと','3時間ごと','4時間ごと','城は予定時刻に接続し、空いている軍団を派遣して終了します。'],
+    vi:['Khoảng kiểm tra thu thập','Mỗi giờ','Mỗi 2 giờ','Mỗi 3 giờ','Mỗi 4 giờ','Lâu đài đăng nhập đúng lịch, gửi quân đoàn khả dụng rồi thoát.']
+  };
+  Object.keys(GATHER_INTERVAL_OV).forEach(function(lang){var v=GATHER_INTERVAL_OV[lang],target=lang==='en'?EN:OV[lang];Object.assign(target,{gatherInterval:v[0],gatherEvery1:v[1],gatherEvery2:v[2],gatherEvery3:v[3],gatherEvery4:v[4],gatherIntervalHint:v[5]});});
 
   var REGION_OV = {
     ar:{region:'المنطقة',ordinaryResources:'الموارد العادية المفتوحة',stockUpdated:'آخر تأكيد',stockUnavailable:'في انتظار اتصال البوت التالي',stockLimitNote:'قد تكون الكمية المرسلة أقل بسبب حدود مركز التجارة والضريبة وحد استقبال القلعة.'},
@@ -272,14 +291,14 @@
       var payloadVersion=Number(payload.v||0),offset=payloadVersion>=4?-1:0;
       var featureKeys=FEATURE_GROUPS.reduce(function(a,b){return a.concat(b);},[]), features={};
       FEATURE_MASK_KEYS.forEach(function(key,index){if(featureKeys.indexOf(key)!==-1){features[key]=!!(Number(row[6+offset]) & Math.pow(2,index));}});
-      return {id:row[0],castle_name:row[1],on_off:row[3+offset],resources:{food:row[4+offset][0],wood:row[4+offset][1],steel:row[4+offset][2],oil:row[4+offset][3]},features:features,shops:{arena:row[7+offset]||[],vip:row[8+offset]||[]},resource_snapshot:Array.isArray(row[9+offset])?{food:row[9+offset][0],wood:row[9+offset][1],steel:row[9+offset][2],oil:row[9+offset][3]}:null,resource_snapshot_at:Number(row[10+offset]||0),edit_revision:String(row[11+offset]||''),subscription_end:payloadVersion>=5&&typeof row[12+offset]==='string'?row[12+offset]:''};
+      return {id:row[0],castle_name:row[1],on_off:row[3+offset],resources:{food:row[4+offset][0],wood:row[4+offset][1],steel:row[4+offset][2],oil:row[4+offset][3]},features:features,shops:{arena:row[7+offset]||[],vip:row[8+offset]||[]},resource_snapshot:Array.isArray(row[9+offset])?{food:row[9+offset][0],wood:row[9+offset][1],steel:row[9+offset][2],oil:row[9+offset][3]}:null,resource_snapshot_at:Number(row[10+offset]||0),edit_revision:String(row[11+offset]||''),subscription_end:payloadVersion>=5&&typeof row[12+offset]==='string'?row[12+offset]:'',gather_interval_hours:payloadVersion>=7?Number(row[13+offset]||1):1};
     });
     state.farms = rawFarms.map(function (farm) {
       var features = Object.assign({}, DEFAULT_FEATURES, farm.features || {});
       return {
         id:String(farm.id), castle_name:String(farm.castle_name || ('farm-' + farm.id)), on_off:farm.on_off ? 1 : 0,
         resources:Object.assign({food:0,wood:0,steel:0,oil:0}, farm.resources || {}),
-        features:features, shops:Object.assign({arena:[],vip:[]}, farm.shops || {}), resource_snapshot:farm.resource_snapshot, resource_snapshot_at:Number(farm.resource_snapshot_at||0),edit_revision:String(farm.edit_revision||farm.base_revision||''),subscription_end:String(farm.subscription_end||'')
+        features:features, shops:Object.assign({arena:[],vip:[]}, farm.shops || {}), resource_snapshot:farm.resource_snapshot, resource_snapshot_at:Number(farm.resource_snapshot_at||0),edit_revision:String(farm.edit_revision||farm.base_revision||''),subscription_end:String(farm.subscription_end||''),gather_interval_hours:[1,2,3,4].includes(Number(farm.gather_interval_hours))?Number(farm.gather_interval_hours):1
       };
     });
     state.autoContracts=(Array.isArray(payload.ac)?payload.ac:[]).filter(function(row){return Array.isArray(row)&&row.length===8&&typeof row[0]==='string'&&/^at_[A-Za-z0-9_-]{9,77}$/.test(row[0])&&/^\d+$/.test(String(row[1]))&&Array.isArray(row[2])&&Array.isArray(row[3])&&row[2].length===4&&row[3].length===4;}).map(function(row){var requested={},delivered={};['food','wood','steel','oil'].forEach(function(key,index){requested[key]=Math.max(0,Number(row[2][index])||0);delivered[key]=Math.max(0,Number(row[3][index])||0);});return {id:row[0],target:String(row[1]),requested:requested,delivered:delivered,days:Math.max(0,Number(row[4])||0),status:['active','paused','completed','cancelled'].includes(row[5])?row[5]:'completed',name:String(row[6]||''),region:Math.max(0,Number(row[7])||0)};});
@@ -518,6 +537,7 @@
     editor.querySelectorAll('[data-editor-tab]').forEach(function(button){button.onclick=function(){state.editorTab=button.dataset.editorTab;renderEditor();};});
     editor.querySelectorAll('[data-field]').forEach(function(input){input.oninput=function(){f[input.dataset.field]=input.value;};});
     editor.querySelectorAll('[data-feature]').forEach(function(input){input.onchange=function(){f.features[input.dataset.feature]=input.checked;};});
+    editor.querySelectorAll('[data-gather-interval]').forEach(function(input){input.onchange=function(){f.gather_interval_hours=Number(input.value);};});
     editor.querySelectorAll('[data-step]').forEach(function(btn){btn.onclick=function(){var k=btn.dataset.resource,delta=Number(btn.dataset.step),next=Math.max(0,Math.min(5,Number(f.resources[k])+delta));if(delta>0&&total(f)>=5){setMessage(tr('maxFive'),'error');return;}f.resources[k]=next;renderEditor();};});
     editor.querySelectorAll('[data-shop]').forEach(function(input){input.onchange=function(){var shop=input.dataset.shop,id=Number(input.dataset.item),list=f.shops[shop]||[];f.shops[shop]=input.checked?Array.from(new Set(list.concat([id]))):list.filter(function(x){return Number(x)!==id;});};});
     var showPass=document.getElementById('showPass');if(showPass){showPass.onclick=function(){var p=document.getElementById('password');p.type=p.type==='password'?'text':'password';};}
@@ -527,14 +547,14 @@
   function identityHtml(f){return '<section class="section-card"><h3 class="section-title"><span>◆</span>'+esc(tr('identity'))+'</h3><div class="form-grid"><label class="form-row full"><span class="label">'+esc(tr('nickname'))+'</span><input class="field" data-field="castle_name" value="'+esc(f.castle_name)+'"></label></div></section>';}
   function featureToggleHtml(key,label,f){return '<label class="context-feature"><span><small>'+esc(tr('functions'))+'</small><b>'+esc(label)+'</b></span>'+fireSwitch('type="checkbox" data-feature="'+key+'" aria-label="'+esc(label)+'"',!!f.features[key])+'</label>';}
   function functionsHtml(f){return '<section class="section-card"><h3 class="section-title"><span>⚙</span>'+esc(tr('functions'))+'</h3><div class="context-features">'+FUNCTION_TAB_FEATURE_KEYS.map(function(key){return featureToggleHtml(key,featureName(key),f);}).join('')+'</div></section>';}
-  function resourcesHtml(f){return featureToggleHtml('gathering',featureName('gathering'),f)+'<section class="section-card"><h3 class="section-title"><span>⛏</span>'+esc(tr('gather'))+'</h3><div class="resource-grid">'+['food','wood','steel','oil'].map(function(k){return '<div class="resource"><b>'+esc(tr(k))+'</b><button class="step" data-resource="'+k+'" data-step="-1">−</button><span class="count">'+Number(f.resources[k])+'</span><button class="step" data-resource="'+k+'" data-step="1">+</button></div>';}).join('')+'</div><div class="total"><span>'+esc(tr('total'))+'</span><strong>'+total(f)+' / 5</strong></div></section>';}
+  function resourcesHtml(f){var interval=[1,2,3,4].includes(Number(f.gather_interval_hours))?Number(f.gather_interval_hours):1;return featureToggleHtml('gathering',featureName('gathering'),f)+'<section class="section-card"><h3 class="section-title"><span>⏱</span>'+esc(tr('gatherInterval'))+'</h3><label class="form-row full"><span class="label">'+esc(tr('gatherInterval'))+'</span><select class="field" data-gather-interval>'+[1,2,3,4].map(function(hours){return '<option value="'+hours+'" '+(hours===interval?'selected':'')+'>'+esc(tr('gatherEvery'+hours))+'</option>';}).join('')+'</select></label><div class="note">'+esc(tr('gatherIntervalHint'))+'</div></section><section class="section-card"><h3 class="section-title"><span>⛏</span>'+esc(tr('gather'))+'</h3><div class="resource-grid">'+['food','wood','steel','oil'].map(function(k){return '<div class="resource"><b>'+esc(tr(k))+'</b><button class="step" data-resource="'+k+'" data-step="-1">−</button><span class="count">'+Number(f.resources[k])+'</span><button class="step" data-resource="'+k+'" data-step="1">+</button></div>';}).join('')+'</div><div class="total"><span>'+esc(tr('total'))+'</span><strong>'+total(f)+' / 5</strong></div></section>';}
   function shopHtml(name,title,f){var feature=name+'_store';return featureToggleHtml(feature,featureName(feature),f)+'<section class="section-card"><h3 class="section-title"><span>🛒</span>'+esc(title)+'</h3><div class="note">'+esc(tr('shopSafety'))+'</div>'+shopList(name,title,f)+'</section>';}
   function shopList(name,title,f){var selected=(f.shops[name]||[]).map(Number),rawItems=state.catalog[name],items=Array.isArray(rawItems)?rawItems:[];return '<h4>'+esc(title)+'</h4><div class="shop-list">'+items.map(function(item){var itemId=safeCatalogInteger(item&&item.item_id),quantity=safeCatalogInteger(item&&item.quantity),price=safeCatalogInteger(item&&item.price),unlockLevel=safeCatalogInteger(item&&item.unlock_level),currencySubtype=safeCatalogInteger(item&&item.currency_subtype,5);var unlock=unlockLevel?(name==='vip'?tr('vip')+' ': 'Rank ')+unlockLevel:'';return '<label class="shop-item">'+fireSwitch('type="checkbox" data-shop="'+esc(name)+'" data-item="'+esc(itemId)+'"',selected.includes(itemId))+'<span><div class="shop-item-name">'+esc(itemName(item||{}))+'</div><div class="shop-item-meta">ID '+esc(itemId)+' · '+esc(tr('qty'))+' '+esc(quantity)+(unlock?' · '+esc(unlock):'')+'</div></span><span class="price">'+esc(price)+' '+esc(name==='arena'?tr('points'):tr(['','gems','oil','food','wood','steel'][currencySubtype]||''))+'</span></label>';}).join('')+'</div>';}
 
   function validateFarm(f) {
-    return !!f&&/^[0-9a-f]{64}$/i.test(f.edit_revision)&&total(f)<=5;
+    return !!f&&/^[0-9a-f]{64}$/i.test(f.edit_revision)&&total(f)<=5&&[1,2,3,4].includes(Number(f.gather_interval_hours));
   }
-  function orderForFarm(f){var features={};SAVE_FEATURE_KEYS.forEach(function(key){features[key]=!!f.features[key];});return {farm_id:f.id,base_revision:f.edit_revision,castle_name:f.castle_name,resources:{food:Number(f.resources.food),wood:Number(f.resources.wood),steel:Number(f.resources.steel),oil:Number(f.resources.oil)},features:features,shops:{arena:(f.shops.arena||[]).map(Number),vip:(f.shops.vip||[]).map(Number)}};}
+  function orderForFarm(f){var features={};SAVE_FEATURE_KEYS.forEach(function(key){features[key]=!!f.features[key];});return {farm_id:f.id,base_revision:f.edit_revision,castle_name:f.castle_name,resources:{food:Number(f.resources.food),wood:Number(f.resources.wood),steel:Number(f.resources.steel),oil:Number(f.resources.oil)},features:features,shops:{arena:(f.shops.arena||[]).map(Number),vip:(f.shops.vip||[]).map(Number)},gather_interval_hours:Number(f.gather_interval_hours)};}
   function base64Url(bytes){
     var binary='',size=0x8000;
     for(var offset=0;offset<bytes.length;offset+=size){binary+=String.fromCharCode.apply(null,bytes.subarray(offset,offset+size));}
