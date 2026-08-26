@@ -252,8 +252,13 @@
       eyebrow:'CASTLE ADMIN',title:'Edit castle account',intro:'Review the account and send all changes in one request.',oldCastle:'Current castle',email:'New IGG email',emailHint:'Leave blank to keep the current email',currentEmail:'Current email',password:'New IGG password',passwordHint:'Leave blank to keep the current password',newCastle:'New castle ID',telegram:'Telegram ID',subscription:'Subscription end date',enabled:'Castle enabled',submit:'Save changes',sending:'Sending changes…',sent:'Edit request sent. Wait for confirmation from the bot.',invalid:'Check the email, IDs, and subscription date.',privacy:'Old credentials are never shown. The new password is not stored by this page.',settingsNote:'Automation settings remain available from the separate castle-settings button.'
     }
   };
+  var ADMIN_SERVER_TEXT = {
+    ar:{eyebrow:'مركز تشغيل السيرفرات',title:'حالة السيرفرات',intro:'مراقبة مباشرة لمحركات القلاع والحمل الحالي. خدمة تيليجرام تظل متاحة بعد إيقاف المحركات.',running:'شغال',stopped:'متوقف',unreachable:'غير متاح',cpu:'المعالج',memory:'الذاكرة',disk:'التخزين',load:'متوسط الحمل',uptime:'مدة التشغيل',castles:'القلاع',total:'الإجمالي',online:'أونلاين',transitioning:'مهمة/اتصال',offline:'أوفلاين',disabled:'متوقفة',services:'الخدمات',start:'تشغيل البوت',stop:'إيقاف البوت',refresh:'تحديث الحالة',confirmStop:'هل تريد إيقاف محركات القلاع على {server}؟ خدمة تيليجرام ستظل شغالة.',sending:'جاري إرسال الأمر…',sent:'تم إرسال الأمر. ستصلك لوحة محدثة في تيليجرام.',openTelegram:'افتح اللوحة من أمر /servers داخل البوت.',updated:'آخر تحديث'},
+    en:{eyebrow:'SERVER OPERATIONS',title:'Server status',intro:'Live castle-engine health and host load. Telegram remains available after the engines are stopped.',running:'Running',stopped:'Stopped',unreachable:'Unreachable',cpu:'CPU',memory:'Memory',disk:'Disk',load:'Load average',uptime:'Uptime',castles:'Castles',total:'Total',online:'Online',transitioning:'Task/reconnect',offline:'Offline',disabled:'Stopped',services:'Services',start:'Start bot',stop:'Stop bot',refresh:'Refresh status',confirmStop:'Stop the castle engines on {server}? Telegram will remain available.',sending:'Sending command…',sent:'Command sent. Telegram will return a refreshed dashboard.',openTelegram:'Open this dashboard from /servers in the bot.',updated:'Last updated'}
+  };
   function adminText(key){var language=state&&state.lang==='ar'?'ar':'en';return ADMIN_ADD_TEXT[language][key]||key;}
   function adminEditText(key){var language=state&&state.lang==='ar'?'ar':'en';return ADMIN_EDIT_TEXT[language][key]||key;}
+  function adminServerText(key){var language=state&&state.lang==='ar'?'ar':'en';return ADMIN_SERVER_TEXT[language][key]||key;}
   function isExactAdminAddLaunch(value){
     if(!value||Object.getPrototypeOf(value)!==Object.prototype){return false;}
     if(Object.keys(value).sort().join(',')!=='l,m,n,t,v'){return false;}
@@ -274,12 +279,27 @@
     if(!Number.isSafeInteger(current.telegram_id)||current.telegram_id<=0||typeof current.enabled!=='boolean'){return false;}
     return [current.subscription_start,current.subscription_end].every(function(date){return date===null||date===''||(typeof date==='string'&&adminValidIsoDateValue(date));});
   }
+  function isExactAdminServersLaunch(value){
+    if(!value||Object.getPrototypeOf(value)!==Object.prototype){return false;}
+    if(Object.keys(value).sort().join(',')!=='l,m,n,s,t,v'){return false;}
+    if(value.v!==1||value.m!=='admin_servers'||!Number.isSafeInteger(value.t)||value.t<=0||!Number.isSafeInteger(value.s)||value.s<=0){return false;}
+    if(typeof value.l!=='string'||!LANGS.some(function(row){return row[0]===value.l;})||!Array.isArray(value.n)||value.n.length!==2){return false;}
+    return value.n.every(function(row,index){
+      if(!Array.isArray(row)||row.length!==13||row[0]!==['server-1','server-2'][index]||typeof row[1]!=='string'||typeof row[2]!=='string'){return false;}
+      if(![0,1].includes(row[3])||![0,1].includes(row[4])){return false;}
+      if(!row.slice(5,11).every(function(number){return typeof number==='number'&&Number.isFinite(number)&&number>=0;})){return false;}
+      if(!Array.isArray(row[11])||row[11].length!==5||!row[11].every(function(number){return Number.isSafeInteger(number)&&number>=0;})){return false;}
+      return Array.isArray(row[12])&&row[12].every(function(service){return Array.isArray(service)&&service.length===2&&typeof service[0]==='string'&&['active','inactive','activating','deactivating','failed','unknown'].includes(service[1]);});
+    });
+  }
   var payload = await decodeData();
   if(typeof history!=='undefined'&&history&&typeof history.replaceState==='function'){
     try{history.replaceState(null,'',(location.pathname||'./')+(location.hash||''));}catch(_){}
   }
-  var state = {farms:[], autoContracts:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, adminClientEdit:false, adminClientFarmId:'', adminClientRevision:'', adminClientCurrent:null, adminClientEditPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, autoTransfer:false, notifyMode:'self', recipientTelegram:'', search:''};
-  if (isExactAdminClientEditLaunch(payload)) {
+  var state = {farms:[], autoContracts:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, adminClientEdit:false, adminClientFarmId:'', adminClientRevision:'', adminClientCurrent:null, adminClientEditPending:false, adminServers:false, serverNodes:[], serverObservedAt:0, serverActionPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, autoTransfer:false, notifyMode:'self', recipientTelegram:'', search:''};
+  if (isExactAdminServersLaunch(payload)) {
+    state.adminServers=true;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);state.serverObservedAt=payload.s;state.serverNodes=payload.n.map(function(row){return {id:row[0],label:row[1],hostname:row[2],reachable:row[3]===1,running:row[4]===1,cpu:row[5],memory:row[6],disk:row[7],load:row[8],cores:row[9],uptime:row[10],castles:{total:row[11][0],online:row[11][1],transitioning:row[11][2],offline:row[11][3],stopped:row[11][4]},services:row[12]};});
+  } else if (isExactAdminClientEditLaunch(payload)) {
     state.adminClientEdit=true;state.adminClientFarmId=payload.x;state.adminClientRevision=payload.r;state.adminClientCurrent=clone(payload.c);state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);
   } else if (isExactAdminAddLaunch(payload)) {
     state.adminAdd=true;state.adminAddNonce=payload.n;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);
@@ -310,7 +330,7 @@
     if(!Number.isInteger(state.kingdom)||state.kingdom<=0||(state.adminEdit&&state.farms.length!==1)){payload=null;state.farms=[];}
   } else {payload=null;}
 
-  var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen'), adminAdd=document.getElementById('adminAddScreen'), adminEdit=document.getElementById('adminEditScreen');
+  var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen'), adminAdd=document.getElementById('adminAddScreen'), adminEdit=document.getElementById('adminEditScreen'), adminServers=document.getElementById('adminServersScreen');
   var saveBtn = document.getElementById('saveBtn'), message = document.getElementById('message'), backBtn = document.getElementById('backBtn');
   function tr(key) { return (OV[state.lang] && OV[state.lang][key]) || (TRANSFER_OV[state.lang] && TRANSFER_OV[state.lang][key]) || (REGION_OV[state.lang] && REGION_OV[state.lang][key]) || EN[key] || key; }
   function featureName(key) { return state.lang === 'ar' ? FEATURE_AR[key] : ((FEATURE_OTHER[state.lang] && FEATURE_OTHER[state.lang][key]) || FEATURE_EN[key]); }
@@ -327,6 +347,40 @@
   function primaryTabsHtml(active){return '<nav class="screen-tabs" aria-label="'+esc(tr('title'))+'"><button class="screen-tab '+(active==='castles'?'active':'')+'" type="button" data-primary-tab="castles">🏰 '+esc(tr('castlesTab'))+'</button><button class="screen-tab '+(active==='transfer'?'active':'')+'" type="button" data-primary-tab="transfer">📦 '+esc(tr('sendTransfer'))+'</button></nav>';}
   function bindPrimaryTabs(root){root.querySelectorAll('[data-primary-tab]').forEach(function(button){button.onclick=function(){if(button.dataset.primaryTab==='castles'){renderHome();return;}renderTransfer();};});}
   function direction() { var rtl = state.lang === 'ar'; document.documentElement.dir = rtl ? 'rtl' : 'ltr'; document.documentElement.lang = state.lang; document.body.dataset.lang = state.lang; }
+
+  function serverPercent(value){return Math.max(0,Math.min(100,Number(value)||0));}
+  function serverUptime(seconds){
+    seconds=Math.max(0,Math.floor(Number(seconds)||0));var days=Math.floor(seconds/86400),hours=Math.floor((seconds%86400)/3600),minutes=Math.floor((seconds%3600)/60);
+    if(state.lang==='ar'){return (days?days+' يوم ':'')+hours+' س '+minutes+' د';}
+    return (days?days+'d ':'')+hours+'h '+minutes+'m';
+  }
+  function serverMetricHtml(label,value,suffix,kind){var percent=serverPercent(kind==='load'?0:value);return '<div class="server-metric"><div><span>'+esc(label)+'</span><b>'+esc(value+suffix)+'</b></div>'+(kind==='load'?'':'<i><em style="width:'+percent+'%"></em></i>')+'</div>';}
+  function serverServiceLabel(name){var labels={ar:{'fleet-controller':'موزع القلاع','offline-worker':'عامل المهام','always-online':'الأونلاين الدائم'},en:{'fleet-controller':'Fleet controller','offline-worker':'Task worker','always-online':'Always online'}};return (labels[state.lang==='ar'?'ar':'en'][name]||name);}
+  function serverServiceState(stateValue){var labels={ar:{active:'شغالة',inactive:'متوقفة',activating:'تبدأ',deactivating:'تتوقف',failed:'عطل',unknown:'غير معروفة'},en:{active:'Active',inactive:'Stopped',activating:'Starting',deactivating:'Stopping',failed:'Failed',unknown:'Unknown'}};return (labels[state.lang==='ar'?'ar':'en'][stateValue]||stateValue);}
+  function serverCardHtml(node){
+    var status=node.reachable?(node.running?'running':'stopped'):'unreachable';var statusText=adminServerText(status);var action=node.running?'stop':'start';
+    var counts=[['total',node.castles.total],['online',node.castles.online],['transitioning',node.castles.transitioning],['offline',node.castles.offline],['disabled',node.castles.stopped]];
+    var services=node.services.map(function(service){return '<div class="server-service"><span>'+esc(serverServiceLabel(service[0]))+'</span><b class="'+esc(service[1])+'">'+esc(serverServiceState(service[1]))+'</b></div>';}).join('');
+    return '<article class="server-card '+status+'"><header><div><span class="server-node-dot"></span><div><h3>'+esc(node.label)+'</h3><small>'+esc(node.hostname||node.id)+'</small></div></div><strong>'+esc(statusText)+'</strong></header>'+
+      '<div class="server-metrics">'+serverMetricHtml(adminServerText('cpu'),node.cpu.toFixed(1),'%','percent')+serverMetricHtml(adminServerText('memory'),node.memory.toFixed(1),'%','percent')+serverMetricHtml(adminServerText('disk'),node.disk.toFixed(1),'%','percent')+serverMetricHtml(adminServerText('load'),node.load.toFixed(2)+' / '+node.cores,'','load')+'</div>'+
+      '<div class="server-uptime"><span>'+esc(adminServerText('uptime'))+'</span><b>'+esc(serverUptime(node.uptime))+'</b></div>'+
+      '<section class="server-castles"><h4>'+esc(adminServerText('castles'))+'</h4><div>'+counts.map(function(item){return '<span class="'+esc(item[0])+'"><small>'+esc(adminServerText(item[0]))+'</small><b>'+esc(item[1])+'</b></span>';}).join('')+'</div></section>'+
+      '<section class="server-services"><h4>'+esc(adminServerText('services'))+'</h4>'+services+'</section>'+
+      '<button class="server-power '+action+'" type="button" data-server-action="'+action+'" data-server-node="'+esc(node.id)+'" '+(!node.reachable||state.serverActionPending?'disabled':'')+'>'+(action==='start'?'▶':'■')+' '+esc(adminServerText(action))+'</button></article>';
+  }
+  function sendServerDashboardRequest(request){
+    if(!tg||state.serverActionPending){setMessage(adminServerText('openTelegram'),'error');return;}
+    state.serverActionPending=true;adminServers.querySelectorAll('button').forEach(function(button){button.disabled=true;});setMessage(adminServerText('sending'),'success');
+    try{tg.sendData(JSON.stringify(request));setMessage(adminServerText('sent'),'success');setTimeout(function(){try{tg.close();}catch(_){}},250);}
+    catch(_){state.serverActionPending=false;setMessage(adminServerText('openTelegram'),'error');renderAdminServers();}
+  }
+  function renderAdminServers(){
+    state.screen='admin_servers';direction();home.hidden=editor.hidden=language.hidden=transfer.hidden=adminAdd.hidden=adminEdit.hidden=true;adminServers.hidden=false;backBtn.hidden=true;saveBtn.parentElement.hidden=true;document.getElementById('languageBtn').hidden=true;document.getElementById('eyebrow').textContent=adminServerText('eyebrow');document.getElementById('title').textContent=adminServerText('title');
+    var updated=new Date(state.serverObservedAt*1000).toLocaleString(state.lang);
+    adminServers.innerHTML='<div class="server-hero"><div class="server-hero-icon">⌁</div><div><h2>'+esc(adminServerText('title'))+'</h2><p>'+esc(adminServerText('intro'))+'</p><small>'+esc(adminServerText('updated'))+': '+esc(updated)+'</small></div></div><div class="server-grid">'+state.serverNodes.map(serverCardHtml).join('')+'</div><button id="serverRefresh" class="server-refresh" type="button" '+(state.serverActionPending?'disabled':'')+'>↻ '+esc(adminServerText('refresh'))+'</button>';
+    adminServers.querySelectorAll('[data-server-action]').forEach(function(button){button.onclick=function(){var operation=button.dataset.serverAction,node=button.dataset.serverNode;if(operation==='stop'&&!confirm(adminServerText('confirmStop').replace('{server}',node))){return;}sendServerDashboardRequest({action:'admin_server_control',node_id:node,operation:operation});};});
+    document.getElementById('serverRefresh').onclick=function(){sendServerDashboardRequest({action:'admin_server_refresh'});};
+  }
 
   function adminUtcIso(date){return date.getUTCFullYear()+'-'+String(date.getUTCMonth()+1).padStart(2,'0')+'-'+String(date.getUTCDate()).padStart(2,'0');}
   function adminTodayIso(){
@@ -623,7 +677,8 @@
   document.getElementById('languageBtn').onclick=renderLanguage;
   saveBtn.onclick=async function(){if(state.screen==='admin_client_edit'){submitAdminClientEdit();return;}if(state.screen==='admin_add'){submitAdminAdd();return;}if(state.screen==='language'){confirmLanguage();return;}if(state.screen==='editor'){await saveCurrentFarm();}};
   if(typeof window.addEventListener==='function'){window.addEventListener('pagehide',clearAdminPassword);}
-  if (state.adminClientEdit) { renderAdminClientEdit(); }
+  if (state.adminServers) { renderAdminServers(); }
+  else if (state.adminClientEdit) { renderAdminClientEdit(); }
   else if (state.adminAdd) { renderAdminAdd(); }
   else if (!payload) { state.lang='en'; renderHome(); setMessage(tr('openTelegram'),'error'); }
   else if(state.adminEdit&&state.farms.length===1){state.current=state.farms[0];renderEditor();}
