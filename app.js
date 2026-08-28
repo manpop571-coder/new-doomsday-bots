@@ -301,7 +301,7 @@
     if(!Array.isArray(value.s)||value.s.length!==3||!value.s.every(function(x){return Number.isSafeInteger(x)&&x>=0;})){return false;}
     if(!Array.isArray(value.e)||!value.e.every(function(end,index){if(!Number.isSafeInteger(end)||(index&&end<=value.e[index-1])){return false;}var raw=String(end);return /^\d{8}$/.test(raw)&&adminValidIsoDateValue(raw.slice(0,4)+'-'+raw.slice(4,6)+'-'+raw.slice(6,8));})){return false;}
     return Array.isArray(value.d)&&value.d.every(function(group){
-      if(!Array.isArray(group)||group.length!==(value.v>=2?3:2)||!Number.isSafeInteger(group[0])||group[0]<=0||!Array.isArray(group[1])||!group[1].length||!group[1].every(function(id){return typeof id==='string'&&/^[1-9]\d{0,19}$/.test(id);})){return false;}
+      if(!Array.isArray(group)||group.length!==(value.v>=2?3:2)||!Number.isSafeInteger(group[0])||group[0]<=0||!Array.isArray(group[1])||!group[1].length||!group[1].every(function(id){return value.v>=2?Number.isSafeInteger(id)&&id>0:typeof id==='string'&&/^[1-9]\d{0,19}$/.test(id);})){return false;}
       return value.v<2||(Array.isArray(group[2])&&group[2].length===group[1].length&&group[2].every(function(index){return Number.isSafeInteger(index)&&index>=0&&index<=value.e.length;}));
     });
   }
@@ -311,7 +311,7 @@
   }
   var state = {farms:[], autoContracts:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, adminClientEdit:false, adminClientFarmId:'', adminClientRevision:'', adminClientCurrent:null, adminClientEditPending:false, adminServers:false, serverNodes:[], serverObservedAt:0, serverActionPending:false, adminDashboard:false, adminDirectory:[], adminSummary:[0,0,0], adminDashboardNonce:'', adminSection:'home', adminSearch:'', adminPrefill:'', adminPrefillScope:'telegram', adminRenewVerified:null, adminActionPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, autoTransfer:false, notifyMode:'self', recipientTelegram:'', search:''};
   if (isExactAdminDashboardLaunch(payload)) {
-    state.adminDashboard=true;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);state.adminDashboardNonce=payload.n;state.adminDirectory=payload.d.map(function(group){return [group[0],clone(group[1]),group[2].map(function(index){return index?payload.e[index-1]:0;})];});state.adminSummary=clone(payload.s);
+    state.adminDashboard=true;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);state.adminDashboardNonce=payload.n;state.adminDirectory=payload.d.map(function(group){return [group[0],group[1].map(String),group[2].map(function(index){return index?payload.e[index-1]:0;})];});state.adminSummary=clone(payload.s);
   } else if (isExactAdminServersLaunch(payload)) {
     state.adminServers=true;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);state.serverObservedAt=payload.s;state.serverNodes=payload.n.map(function(row){return {id:row[0],label:row[1],hostname:row[2],reachable:row[3]===1,running:row[4]===1,cpu:row[5],memory:row[6],disk:row[7],load:row[8],cores:row[9],uptime:row[10],castles:{total:row[11][0],online:row[11][1],transitioning:row[11][2],offline:row[11][3],stopped:row[11][4]},services:row[12]};});
   } else if (isExactAdminClientEditLaunch(payload)) {
