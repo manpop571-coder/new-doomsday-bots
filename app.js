@@ -105,6 +105,11 @@
   };
   Object.keys(GATHER_INTERVAL_OV).forEach(function(lang){var v=GATHER_INTERVAL_OV[lang],target=lang==='en'?EN:OV[lang];Object.assign(target,{gatherInterval:v[0],gatherEvery1:v[1],gatherEvery2:v[2],gatherEvery3:v[3],gatherEvery4:v[4],gatherAlwaysOnline:v[5],gatherIntervalHint:v[6],gatherAlwaysOnlineHint:v[7]});});
 
+  var RESOURCE_REFRESH_OV={
+    ar:['تحديث الموارد','جاري طلب قراءة حية من القلاع…'],en:['Refresh resources','Requesting a live reading from the castles…'],fr:['Actualiser les ressources','Lecture en direct des châteaux…'],de:['Ressourcen aktualisieren','Live-Daten der Burgen werden abgerufen…'],it:['Aggiorna risorse','Lettura in tempo reale dei castelli…'],es:['Actualizar recursos','Solicitando lectura en vivo de los castillos…'],pt:['Atualizar recursos','Solicitando leitura ao vivo dos castelos…'],ru:['Обновить ресурсы','Запрашиваем свежие данные замков…'],'zh-cn':['刷新资源','正在请求城堡实时数据…'],'zh-tw':['重新整理資源','正在請求城堡即時資料…'],id:['Perbarui sumber daya','Meminta data langsung dari kastel…'],th:['รีเฟรชทรัพยากร','กำลังขอข้อมูลสดจากปราสาท…'],tr:['Kaynakları yenile','Kalelerden canlı veri isteniyor…'],ko:['자원 새로고침','성의 실시간 데이터를 요청하는 중…'],ja:['資源を更新','城の最新データを取得しています…'],vi:['Làm mới tài nguyên','Đang yêu cầu dữ liệu trực tiếp từ các lâu đài…']
+  };
+  Object.keys(RESOURCE_REFRESH_OV).forEach(function(lang){var target=lang==='en'?EN:OV[lang],v=RESOURCE_REFRESH_OV[lang];Object.assign(target,{refreshResources:v[0],refreshResourcesPending:v[1]});});
+
   var REGION_OV = {
     ar:{region:'المنطقة',ordinaryResources:'الموارد العادية المفتوحة',stockUpdated:'آخر تأكيد',stockUnavailable:'في انتظار اتصال البوت التالي',stockLimitNote:'قد تكون الكمية المرسلة أقل بسبب حدود مركز التجارة والضريبة وحد استقبال القلعة.'},
     fr:{region:'Région',ordinaryResources:'Ressources ordinaires ouvertes',stockUpdated:'Dernière confirmation',stockUnavailable:'En attente de la prochaine connexion du bot',stockLimitNote:'L’envoi réel peut être inférieur selon les limites, la taxe et le destinataire.'},
@@ -568,7 +573,7 @@
     var rows = state.farms.filter(function(f){var q=state.search.toLowerCase();return !q || f.id.toLowerCase().includes(q) || f.castle_name.toLowerCase().includes(q);});
     var helper = state.copyMode ? '<div class="copy-panel">'+esc(state.copyMode==='source'?tr('chooseSource'):tr('chooseTargets'))+(state.source?' <b>'+esc(tr('source'))+': '+esc(state.source.castle_name)+'</b>':'')+'</div>' : '';
     home.innerHTML = '<div class="hero"><div class="region-badge">'+esc(tr('region'))+' · K'+esc(state.kingdom)+'</div><h2>'+esc(tr('title'))+'</h2><p>'+esc(tr('subtitle'))+' · '+esc(tr('telegram'))+' '+esc(payload ? (payload.telegram_id || payload.t) : '—')+'</p></div>'+primaryTabsHtml('castles')+
-      '<div class="toolbar"><input id="search" class="field" value="'+esc(state.search)+'" placeholder="'+esc(tr('search'))+'">'+(state.adminEdit?'':'<button id="copyBtn" class="small-btn '+(state.copyMode?'active':'')+'" '+(state.copyPending?'disabled':'')+'>'+esc(state.copyMode?tr('cancel'):tr('copy'))+'</button>'+(state.copyMode==='targets'?'<button id="applyBtn" class="small-btn" '+(state.copyPending?'disabled':'')+'>'+esc(tr('apply'))+'</button>':''))+'</div>'+helper+
+      '<div class="toolbar"><input id="search" class="field" value="'+esc(state.search)+'" placeholder="'+esc(tr('search'))+'"><button id="refreshResources" class="small-btn" type="button">↻ '+esc(tr('refreshResources'))+'</button>'+(state.adminEdit?'':'<button id="copyBtn" class="small-btn '+(state.copyMode?'active':'')+'" '+(state.copyPending?'disabled':'')+'>'+esc(state.copyMode?tr('cancel'):tr('copy'))+'</button>'+(state.copyMode==='targets'?'<button id="applyBtn" class="small-btn" '+(state.copyPending?'disabled':'')+'>'+esc(tr('apply'))+'</button>':''))+'</div>'+helper+
       '<div class="castle-list">'+(rows.length?rows.map(castleCard).join(''):'<div class="empty">🏚️<br>'+esc(payload?tr('noFarms'):tr('openTelegram'))+'</div>')+'</div>';
     bindPrimaryTabs(home);
     document.getElementById('search').oninput=function(){
@@ -580,6 +585,7 @@
       });
     };
     var copyButton=document.getElementById('copyBtn');if(copyButton){copyButton.onclick=function(){state.copyMode=state.copyMode?null:'source';state.source=null;state.targets={};renderHome();};}
+    document.getElementById('refreshResources').onclick=function(){var button=this;if(!tg||!hasTelegramScope()){setMessage(tr('openTelegram'),'error');return;}button.disabled=true;setMessage(tr('refreshResourcesPending'),'success');try{tg.sendData(JSON.stringify(addAdminScope({action:'refresh_resources',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner})));}catch(_){button.disabled=false;setMessage(tr('invalid'),'error');}};
     var apply=document.getElementById('applyBtn'); if(apply){apply.onclick=applyCopy;}
     home.querySelectorAll('[data-farm]').forEach(function(card){card.onclick=function(e){var farm=state.farms.find(function(f){return f.id===card.dataset.farm;});if(e.target.matches('input')){e.stopPropagation();}selectCastle(farm);};});
   }
