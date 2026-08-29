@@ -314,6 +314,7 @@
   if(typeof history!=='undefined'&&history&&typeof history.replaceState==='function'){
     try{history.replaceState(null,'',(location.pathname||'./')+(location.hash||''));}catch(_){}
   }
+  var ADMIN_DEFAULT_RENEW_DAYS=31;
   var state = {farms:[], autoContracts:[], catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, adminClientEdit:false, adminClientFarmId:'', adminClientRevision:'', adminClientCurrent:null, adminClientEditPending:false, adminServers:false, serverNodes:[], serverObservedAt:0, serverActionPending:false, adminDashboard:false, adminDirectory:[], adminSummary:[0,0,0], adminDashboardNonce:'', adminSection:'home', adminSearch:'', adminPrefill:'', adminPrefillScope:'telegram', adminRenewVerified:null, adminExpiryMode:'expired', adminExpiryDays:5, adminActionPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, autoTransfer:false, notifyMode:'self', recipientTelegram:'', search:''};
   if (isExactAdminDashboardLaunch(payload)) {
     state.adminDashboard=true;state.owner=payload.t;state.lang=normalizeUiLanguage(payload.l);state.adminDashboardNonce=payload.n;state.adminDirectory=payload.d.map(function(group){return [group[0],group[1].map(String),group[2].map(function(index){return index?payload.e[index-1]:0;})];});state.adminSummary=clone(payload.s);
@@ -515,6 +516,7 @@
   function renderAdminDashboard(){
     state.screen='admin_dashboard';direction();home.hidden=editor.hidden=language.hidden=transfer.hidden=adminAdd.hidden=adminEdit.hidden=adminServers.hidden=true;adminDashboard.hidden=false;backBtn.hidden=state.adminSection==='home';saveBtn.parentElement.hidden=true;document.getElementById('languageBtn').hidden=true;document.getElementById('eyebrow').textContent='مركز الإدارة';document.getElementById('title').textContent=adminSectionTitle();
     adminDashboard.innerHTML=state.adminSection==='home'?adminDashboardHomeHtml():(state.adminSection==='clients'||state.adminSection==='reports'?adminClientsHtml():(state.adminSection==='subscriptions'?adminSubscriptionsHtml():adminActionFormHtml()));
+    var defaultRenewDays=document.getElementById('renewDays');if(defaultRenewDays){defaultRenewDays.value=String(ADMIN_DEFAULT_RENEW_DAYS);}
     bindAdminDashboard();
   }
   function adminSectionTitle(){return {home:'لوحة التحكم',clients:'العملاء والقلاع',subscriptions:'متابعة الاشتراكات',renew:'تجديد الاشتراكات',edit:'تعديل قلعة',remove:'حذف قلعة',operations:'التشغيل والإيقاف',reports:'الحالة والتقارير'}[state.adminSection]||'لوحة التحكم';}
