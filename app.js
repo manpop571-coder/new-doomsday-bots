@@ -204,11 +204,15 @@
     ru:['Ускорение обучения 60 мин.','Продвинутая карта поиска','Случайный набор ресурсов III','Средний набор ресурсов','Карта истребления','Боевой справочник (5 000 опыта)','Защитная ткань','Углеродистая сталь','Углеродистая сталь','Ящик фрагментов обуви','Ящик фрагментов брюк','Чип шлифовки','Ящик фрагментов обуви','Ящик фрагментов брюк','Превосходный ящик обуви','Превосходный ящик брюк','Восстановление выносливости I','Ускорение 5 мин.','Знак элитного героя S','Случайная капсула фрагментов зверя','Стимулятор элитного зверя','Знак легендарного героя S','Фрагмент высокопроизводительного двигателя']
   };
 
+  function readAdminDashboardVarint(bytes,cursor){var value=0,multiplier=1;for(var count=0;count<8;count++){if(cursor.index>=bytes.length){throw new Error('truncated varint');}var byte=bytes[cursor.index++];value+=(byte&127)*multiplier;if(!Number.isSafeInteger(value)){throw new Error('unsafe varint');}if(!(byte&128)){return value;}multiplier*=128;}throw new Error('oversized varint');}
+  function readAdminDashboardText(bytes,cursor,maxLength){var length=readAdminDashboardVarint(bytes,cursor);if(length>maxLength||cursor.index+length>bytes.length){throw new Error('invalid text');}var value=new TextDecoder().decode(bytes.slice(cursor.index,cursor.index+length));cursor.index+=length;return value;}
+  function decodeAdminDashboardBinary(bytes){var cursor={index:0};if(bytes.length<3||bytes[0]!==65||bytes[1]!==68||bytes[2]!==52){throw new Error('invalid dashboard header');}cursor.index=3;var userId=readAdminDashboardVarint(bytes,cursor),language=readAdminDashboardText(bytes,cursor,16),nonce=readAdminDashboardText(bytes,cursor,128),summary=[readAdminDashboardVarint(bytes,cursor),readAdminDashboardVarint(bytes,cursor),readAdminDashboardVarint(bytes,cursor)],expiryCount=readAdminDashboardVarint(bytes,cursor);if(expiryCount>4096){throw new Error('too many expiry dates');}var expiry=[];for(var e=0;e<expiryCount;e++){expiry.push(readAdminDashboardVarint(bytes,cursor));}var ownerCount=readAdminDashboardVarint(bytes,cursor);if(ownerCount>10000){throw new Error('too many owners');}var directory=[],telegramId=0,totalCastles=0;for(var owner=0;owner<ownerCount;owner++){telegramId+=readAdminDashboardVarint(bytes,cursor);var castleCount=readAdminDashboardVarint(bytes,cursor);if(!castleCount||castleCount>10000||totalCastles+castleCount>100000){throw new Error('invalid castle count');}totalCastles+=castleCount;var castles=[],castleId=0;for(var castle=0;castle<castleCount;castle++){var delta=readAdminDashboardVarint(bytes,cursor);castleId=castle?castleId+delta:delta;castles.push(castleId);}var indexes=[];for(var index=0;index<castleCount;index++){indexes.push(readAdminDashboardVarint(bytes,cursor));}directory.push([telegramId,castles,indexes]);}if(cursor.index!==bytes.length){throw new Error('trailing dashboard data');}return {v:4,m:'admin_dashboard',t:userId,l:language,n:nonce,d:directory,e:expiry,s:summary};}
   async function decodeData() {
     try {
       var raw = new URLSearchParams(location.search).get('data');
       if (!raw) { return null; }
-      var compressed = raw.indexOf('z.') === 0;
+      var binaryDashboard = raw.indexOf('b.') === 0;
+      var compressed = binaryDashboard || raw.indexOf('z.') === 0;
       if (compressed) { raw = raw.slice(2); }
       raw = raw.replace(/-/g, '+').replace(/_/g, '/');
       while (raw.length % 4) { raw += '='; }
@@ -220,7 +224,8 @@
       var bytes = Uint8Array.from(binary, function(c){return c.charCodeAt(0);});
       var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
       var decoded = await new Response(stream).arrayBuffer();
-      return JSON.parse(new TextDecoder().decode(decoded));
+      if(decoded.byteLength>262144){return null;}
+      return binaryDashboard?decodeAdminDashboardBinary(new Uint8Array(decoded)):JSON.parse(new TextDecoder().decode(decoded));
     } catch (_) { return null; }
   }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -300,7 +305,7 @@
   function isExactAdminDashboardLaunch(value){
     if(!value||Object.getPrototypeOf(value)!==Object.prototype){return false;}
     if(Object.keys(value).sort().join(',')!=='d,e,l,m,n,s,t,v'){return false;}
-    if(![1,2].includes(value.v)||value.m!=='admin_dashboard'||!Number.isSafeInteger(value.t)||value.t<=0){return false;}
+    if(![1,2,4].includes(value.v)||value.m!=='admin_dashboard'||!Number.isSafeInteger(value.t)||value.t<=0){return false;}
     if(typeof value.l!=='string'||!LANGS.some(function(row){return row[0]===value.l;})){return false;}
     if(typeof value.n!=='string'||!/^[A-Za-z0-9_-]{32,128}$/.test(value.n)){return false;}
     if(!Array.isArray(value.s)||value.s.length!==3||!value.s.every(function(x){return Number.isSafeInteger(x)&&x>=0;})){return false;}
