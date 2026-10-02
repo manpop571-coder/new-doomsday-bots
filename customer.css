@@ -1,0 +1,28 @@
+/* Customer layout: independent help buttons, no changes to admin controllers. */
+:root { color-scheme: dark; --customer-gold:#d9bc74; }
+body { background:#0e1110; }
+.shell { max-width:680px; }
+.sheet,.section-card,.castle-card,.hero,.editor-head { background:#151816; border-color:#393a32; box-shadow:none; }
+.screen-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.screen-tab { min-width:0; white-space:normal; }
+.editor-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.editor-tab { min-height:86px; border-color:#454638; background:#181c19; }
+.editor-tab.active { border-color:var(--customer-gold); color:var(--customer-gold); }
+.context-feature { display:grid; grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr); gap:18px; align-items:center; padding:20px 12px; border-bottom:1px solid #393a32; }
+.context-feature label { cursor:pointer; min-width:0; }
+.context-feature label b { display:block; font-size:15px; line-height:1.7; }
+.context-feature label small { display:block; color:#c7c4b8; font-size:12px; line-height:1.8; }
+.task-help { width:44px; height:44px; min-width:44px; padding:0; border:1px solid var(--customer-gold); border-radius:50%; background:#d9bc741a; color:var(--customer-gold); font-size:28px; line-height:42px; text-align:center; cursor:pointer; }
+.task-help:focus-visible { outline:3px solid white; outline-offset:3px; }
+.context-feature .fire-switch { margin:0; justify-self:end; }
+.context-feature .fire-switch input { position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; z-index:2; cursor:pointer; pointer-events:auto; }
+.context-feature .fire-switch input:disabled { cursor:not-allowed; }
+.context-feature .fire-switch input:focus-visible+.switch-track { outline:3px solid white; outline-offset:3px; }
+.context-feature .switch-track { background:#303631; border-color:#717261; box-shadow:none; }
+.context-feature input:checked+.switch-track { background:var(--customer-gold); border-color:var(--customer-gold); box-shadow:none; }
+.task-help-dialog { box-sizing:border-box; width:min(92vw,580px); max-height:85vh; padding:24px; border:1px solid #5b5138; border-radius:20px; background:#161a17; color:#eeeadd; }
+.task-help-dialog::backdrop { background:#000b; }
+.task-help-dialog h2,.task-help-dialog h3 { color:var(--customer-gold); }
+.task-help-dialog p { line-height:1.9; }
+.note { line-height:1.8; }
+@media(max-width:400px) { .context-feature { gap:10px; padding-inline:2px; } .screen-tab { font-size:12px; padding:12px 4px; } }
