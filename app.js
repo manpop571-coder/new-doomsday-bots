@@ -231,7 +231,8 @@
   var FEATURE_MASK_KEYS = ['resource_challenge',null,null,'gathering','daily_missions','training','refinery',null,'alliance_gifts','mail_rewards','vip_daily_gift','alliance_technology','territory_rewards','event_rewards','police_normal','police_advanced','arena_of_doom','arena_store','vip_store','mysterious_merchant','norah_gifts','city_resources','economic_boosts','building_upgrades','economic_research','radar_noncombat','zombie_hunting','hospital_healing','base_exploration','bloody_brandy','gather_heroes'];
   var DEFAULT_FEATURES = {};
   FEATURE_GROUPS.forEach(function (group) { group.forEach(function (key) { DEFAULT_FEATURES[key] = !['police_normal','police_advanced','arena_of_doom','arena_store','vip_store','norah_gifts','city_resources','economic_boosts','building_upgrades','economic_research','radar_noncombat','zombie_hunting','hospital_healing','base_exploration','bloody_brandy','gather_heroes'].includes(key); }); });
-  FEATURE_EN.allstar = FEATURE_AR.allstar = 'All-Star Night';
+  FEATURE_EN.allstar = 'All-Star Night';
+  FEATURE_AR.allstar = 'ليلة النجوم';
   FEATURE_GROUPS[2].push('allstar');
   SAVE_FEATURE_KEYS.push('allstar');
   FUNCTION_TAB_FEATURE_KEYS.push('allstar');
