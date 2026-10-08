@@ -238,6 +238,17 @@
   FUNCTION_TAB_FEATURE_KEYS.push('allstar');
   FEATURE_MASK_KEYS.push('allstar');
   DEFAULT_FEATURES.allstar = true;
+  FEATURE_EN.monopoly = 'District Showdown (Monopoly)';
+  FEATURE_AR.monopoly = 'المونوبولي — مواجهة المناطق';
+  var MONOPOLY_NAMES={fr:'Affrontement des districts (Monopoly)',de:'Bezirksduell (Monopoly)',it:'Scontro tra distretti (Monopoly)',es:'Duelo de distritos (Monopoly)',pt:'Confronto de distritos (Monopoly)',ru:'Битва районов (Монополия)',tr:'Bölge Mücadelesi (Monopoly)',pl:'Starcie dzielnic (Monopoly)',id:'Pertarungan Distrik (Monopoli)',vi:'Đối đầu khu vực (Cờ tỷ phú)',th:'ศึกประชันเขต (เกมเศรษฐี)',ja:'地区対決（モノポリー）',ko:'구역 대결 (모노폴리)',zh:'街区对决（大富翁）','zh-TW':'街區對決（大富翁）'};
+  Object.keys(MONOPOLY_NAMES).forEach(function(lang){if(!FEATURE_OTHER[lang]){FEATURE_OTHER[lang]={};}FEATURE_OTHER[lang].monopoly=MONOPOLY_NAMES[lang];});
+  FEATURE_OTHER['zh-cn'].monopoly=MONOPOLY_NAMES.zh;
+  FEATURE_OTHER['zh-tw'].monopoly=MONOPOLY_NAMES['zh-TW'];
+  FEATURE_GROUPS[2].push('monopoly');
+  SAVE_FEATURE_KEYS.push('monopoly');
+  FUNCTION_TAB_FEATURE_KEYS.push('monopoly');
+  FEATURE_MASK_KEYS.push('monopoly');
+  DEFAULT_FEATURES.monopoly = false;
   var STATIC_CATALOG = {
     arena:[
       [91030,'60m Training Speedup',1,21,750,0],[91031,'Advanced Search Map',1,21,9000,0],[91032,'Random Resource Pack III',1,21,15,0],[91033,'Intermediate Resource Pack',1,21,360,0],[91034,'Extermination Card',2,21,1000,0],[91035,'Battle Manual (5,000 EXP)',10,21,2500,0],[91036,'Defensive Fabric',300,21,4500,0],[91037,'Carbon Steel',10,21,1500,0],[91038,'Carbon Steel',60,21,9000,1001],[91039,'Shoes Fragment Choice Box',3,21,3000,0],[91040,'Pants Fragment Choice Box',3,21,3750,1002],[91041,'Honing Chip',1,21,2250,1003],[91042,'Shoes Fragment Choice Box',1,21,8500,1004],[91043,'Pants Fragment Choice Box',1,21,10600,1005],[91044,'Superb Shoes Fragment Choice Box',1,21,32000,1006],[91045,'Superb Pants Fragment Choice Box',1,21,40000,1007]
@@ -410,7 +421,7 @@
     var rawFarms = payload.farms || payload.f.map(function(row){
       var payloadVersion=Number(payload.v||0),offset=payloadVersion>=4?-1:0;
       var featureKeys=FEATURE_GROUPS.reduce(function(a,b){return a.concat(b);},[]), features={};
-      FEATURE_MASK_KEYS.forEach(function(key,index){if(featureKeys.indexOf(key)!==-1){features[key]=!!(Number(row[6+offset]) & Math.pow(2,index));}});
+      FEATURE_MASK_KEYS.forEach(function(key,index){if(featureKeys.indexOf(key)!==-1){features[key]=Math.floor(Number(row[6+offset])/Math.pow(2,index))%2===1;}});
       if(Number(payload.af||0)!==1){features.allstar=!(payloadVersion>=9&&Number(row[15+offset])===1);}
       return {id:row[0],castle_name:row[1],on_off:row[3+offset],resources:{food:row[4+offset][0],wood:row[4+offset][1],steel:row[4+offset][2],oil:row[4+offset][3]},features:features,shops:Object.assign({arena:row[7+offset]||[],vip:row[8+offset]||[]},payloadVersion>=9&&row[16+offset]?{arena_mode:row[16+offset]}:{}),resource_snapshot:Array.isArray(row[9+offset])?{food:row[9+offset][0],wood:row[9+offset][1],steel:row[9+offset][2],oil:row[9+offset][3]}:null,resource_snapshot_at:Number(row[10+offset]||0),edit_revision:String(row[11+offset]||''),subscription_end:payloadVersion>=5&&typeof row[12+offset]==='string'?row[12+offset]:'',gather_interval_hours:payloadVersion>=7?Number(row[13+offset]||1):1,always_online:payloadVersion>=8?Number(row[14+offset])===1:true,subscription_plan:payloadVersion>=9&&Number(row[15+offset])===1?'basic':'full'};
     });
@@ -888,6 +899,7 @@
     var showPass=document.getElementById('showPass');if(showPass){showPass.onclick=function(){var p=document.getElementById('password');p.type=p.type==='password'?'text':'password';};}
   }
   var TASK_SECTIONS={gathering:['gathering','resource_challenge','city_resources','economic_boosts','refinery'],development:['building_upgrades','economic_research','gather_heroes','training','hospital_healing'],functions:['daily_missions','radar_noncombat','zombie_hunting','alliance_gifts','alliance_technology','territory_rewards','mail_rewards','vip_daily_gift','event_rewards','police_normal','police_advanced','arena_of_doom'],events:['bloody_brandy','base_exploration','norah_gifts','allstar'],shops:['arena_store','vip_store','mysterious_merchant']};
+  if(String(state.owner)==='8578548068'){TASK_SECTIONS.events.push('monopoly');}
   function editorTabsHtml(){if(state.editorTab==='identity'){return '';}var tabs=[['gathering','⛏',tr('groupGather')],['development','⚒',tr('groupUpgrade')],['functions','✦',tr('groupRewards')],['events','★',tr('groupEvents')],['shops','🛒',tr('shops')]],basic=isBasicFarm(state.current);return '<nav class="editor-tabs" aria-label="'+esc(tr('castleSettings'))+'">'+tabs.map(function(tab){var locked=basic&&tab[0]!=='gathering';return '<button class="editor-tab '+(state.editorTab===tab[0]?'active ':'')+(locked?'locked':'')+'" type="button" data-editor-tab="'+tab[0]+'" aria-disabled="'+String(locked)+'" aria-selected="'+String(state.editorTab===tab[0])+'">'+(locked?'🔒':tab[1])+'<span>'+esc(tab[2])+'</span></button>';}).join('')+'</nav>';}
   function taskListHtml(keys,f){return '<div class="note">'+esc(tr('savedSwitchHint'))+'</div><div class="context-features">'+keys.map(function(key){return featureToggleHtml(key,featureName(key),f);}).join('')+'</div>';}
   function editorTabHtml(f){if(!isEditorTabAllowed(state.editorTab)){return '';}if(isBasicFarm(f)&&['functions','events','arena','vip','development','shops'].includes(state.editorTab)){return lockedPlanHtml();}if(state.editorTab==='identity'){return identityHtml(f);}if(state.editorTab==='functions'){return functionsHtml(f);}if(state.editorTab==='events'){return '<section class="section-card"><h3 class="section-title"><span>★</span>'+esc(tr('groupEvents'))+'</h3>'+taskListHtml(TASK_SECTIONS.events,f)+'</section>';}if(state.editorTab==='gathering'){return resourcesHtml(f)+(isBasicFarm(f)?'':taskListHtml(TASK_SECTIONS.gathering.slice(1),f));}if(state.editorTab==='development'){return taskListHtml(TASK_SECTIONS.development,f);}if(state.editorTab==='shops'){return shopHtml('arena',tr('arenaStore'),f)+shopHtml('vip',tr('vipStore'),f)+featureToggleHtml('mysterious_merchant',featureName('mysterious_merchant'),f);}if(state.editorTab==='arena'){return shopHtml('arena',tr('arenaStore'),f);}if(state.editorTab==='vip'){return shopHtml('vip',tr('vipStore'),f);}return '';}
