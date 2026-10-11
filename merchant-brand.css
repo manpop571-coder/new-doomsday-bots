@@ -1,0 +1,5 @@
+.merchant-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0 14px;min-width:0;border-bottom:1px solid #b58a3a44;margin-bottom:10px}
+.merchant-brand img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none}
+.merchant-brand strong{flex:1;min-width:110px;color:#f0d498;font-size:15px;overflow-wrap:anywhere}
+.merchant-brand a{color:#f0d498;text-decoration:none;border:1px solid #b58a3a66;border-radius:12px;padding:9px 12px;white-space:nowrap;font-size:13px}
+@media(max-width:370px){.merchant-brand{gap:7px}.merchant-brand strong{min-width:80px;font-size:13px}.merchant-brand a{padding:8px;font-size:12px}}

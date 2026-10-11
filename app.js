@@ -395,8 +395,9 @@
   var autoSearchFromUrl = new URLSearchParams(location.search).get('auto_search') || '';
   var autoScopeFromUrl = new URLSearchParams(location.search).get('auto_scope') || '';
   var payload = await decodeData();
+  if(window.FarmBrand && !window.FarmBrand.accept(payload)){payload=null;}
   if(typeof history!=='undefined'&&history&&typeof history.replaceState==='function'){
-    try{history.replaceState(null,'',(location.pathname||'./')+(location.hash||''));}catch(_){}
+    try{history.replaceState(null,'',(location.pathname||'./')+(window.FarmBrand&&window.FarmBrand.active?'?brand='+encodeURIComponent(window.FarmBrand.active.id):'')+(location.hash||''));}catch(_){}
   }
   var ADMIN_DEFAULT_RENEW_DAYS=31;
   var state = {farms:[], autoContracts:[], autoMore:false, autoSearch:'', autoContractScope:'kingdom', autoScopePending:false, catalog:STATIC_CATALOG, lang:'en', kingdom:0, owner:0, adminEdit:false, adminFarmId:'', adminAdd:false, adminAddNonce:'', adminAddPending:false, adminClientEdit:false, adminClientFarmId:'', adminClientRevision:'', adminClientCurrent:null, adminClientEditPending:false, adminServers:false, serverNodes:[], serverObservedAt:0, serverActionPending:false, adminDashboard:false, adminDirectory:[], adminSummary:[0,0,0], adminDashboardNonce:'', adminSection:'home', adminSearch:'', adminPrefill:'', adminPrefillScope:'telegram', adminRenewVerified:null, adminRemoveVerified:null, adminArchiveRevision:'', adminArchiveDirectory:[], adminArchiveScope:'telegram', adminArchiveIdentifier:'', adminArchiveSearched:false, adminArchiveSelected:{}, adminExpiryMode:'expired', adminExpiryDays:5, adminActionPending:false, screen:'home', current:null, editorTab:null, copyMode:null, source:null, targets:{}, pendingSettings:{}, pendingPower:{}, copyPending:false, transferTargets:{}, transferTarget:'', transferAmounts:{food:0,wood:0,steel:0,oil:0}, autoTransfer:false, notifyMode:'self', recipientTelegram:'', search:''};
@@ -447,7 +448,7 @@
   var home = document.getElementById('homeScreen'), editor = document.getElementById('editorScreen'), language = document.getElementById('languageScreen'), transfer=document.getElementById('transferScreen'), adminAdd=document.getElementById('adminAddScreen'), adminEdit=document.getElementById('adminEditScreen'), adminServers=document.getElementById('adminServersScreen'), adminDashboard=document.getElementById('adminDashboardScreen');
   var saveBtn = document.getElementById('saveBtn'), message = document.getElementById('message'), backBtn = document.getElementById('backBtn');
   function customerText(key){var catalog=window.DoomsdayCustomerLocale;return catalog&&catalog[state.lang]&&catalog[state.lang][key];}
-  function tr(key) { return customerText(key) || (OV[state.lang] && OV[state.lang][key]) || (TRANSFER_OV[state.lang] && TRANSFER_OV[state.lang][key]) || (REGION_OV[state.lang] && REGION_OV[state.lang][key]) || EN[key] || key; }
+  function tr(key) { if(key==='title'&&window.FarmBrand&&window.FarmBrand.active){return window.FarmBrand.active.name;} return customerText(key) || (OV[state.lang] && OV[state.lang][key]) || (TRANSFER_OV[state.lang] && TRANSFER_OV[state.lang][key]) || (REGION_OV[state.lang] && REGION_OV[state.lang][key]) || EN[key] || key; }
   function featureName(key) { return customerText('feature.'+key) || (state.lang === 'ar' ? FEATURE_AR[key] : ((FEATURE_OTHER[state.lang] && FEATURE_OTHER[state.lang][key]) || FEATURE_EN[key])); }
   function itemName(item) { var index=ITEM_IDS.indexOf(Number(item.item_id)), names=ITEM_NAMES[state.lang]; return index>=0&&names ? names[index] : item.name; }
   function safeCatalogInteger(value,max){var number=Number(value);return Number.isSafeInteger(number)&&number>=0&&(max===undefined||number<=max)?number:0;}
