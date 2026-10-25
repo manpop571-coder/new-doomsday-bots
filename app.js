@@ -784,8 +784,12 @@
     if(!payload||!state.source||!hasTelegramScope()){setMessage(tr('notAuthorized'),'error');return;}
     if(!tg){setMessage(tr('openTelegram'),'error');return;}
     if(state.copyPending||!/^[0-9a-f]{64}$/i.test(state.source.edit_revision)){return;}
+    var copyText=state.lang==='ar'?'نسخ كل الإعدادات التشغيلية إلى '+ids.length+' مزرعة؟ يشمل الدوال والتطويرات والجمع والمتاجر، ولا يغيّر الاسم أو بيانات الدخول أو الاشتراك أو التشغيل والإيقاف.':'Copy all operational settings to '+ids.length+' farms? Includes functions, upgrades, gathering and shops. Names, credentials, subscription and power are unchanged.';
+    var gems=!!state.source.features.hq_upgrade_gems;
+    if(gems){copyText+=state.lang==='ar'?'\nتنبيه: المصدر مفعّل فيه استخدام الجواهر لتطوير المقر؛ سيُفعّل ذلك في المزارع المختارة.':'\nWarning: HQ gem spending is enabled on the source and will be enabled on the selected farms.';}
+    if(!window.confirm(copyText)){return;}
     state.copyPending=true;var apply=document.getElementById('applyBtn');if(apply){apply.disabled=true;}
-    try{var revision=await selectionRevision(state.source,ids);var request={action:'copy_gathering_settings',language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,source_farm_id:state.source.id,target_farm_ids:ids,selection_revision:revision};tg.sendData(await compressedSaveRequest(request));setMessage(tr('copyPending'),'success');}
+    try{var revision=await selectionRevision(state.source,ids);var request={action:'copy_settings',acknowledge_gem_use:gems,language:state.lang,kingdom_id:state.kingdom,owner_telegram_id:state.owner,source_farm_id:state.source.id,target_farm_ids:ids,selection_revision:revision};tg.sendData(await compressedSaveRequest(request));setMessage(tr('copyPending'),'success');}
     catch(_){state.copyPending=false;if(apply){apply.disabled=false;}setMessage(tr('invalid'),'error');}
   }
 
@@ -933,7 +937,7 @@
   async function compressedSaveRequest(request){
     var raw=JSON.stringify(request),source=new TextEncoder().encode(raw);
     if(source.length<=4096){return raw;}
-    if(request.action==='copy_gathering_settings'&&window.FarmPanelTransport&&window.FarmPanelTransport.active()){return await window.FarmPanelTransport.stage(request);}
+    if((request.action==='copy_gathering_settings'||request.action==='copy_settings')&&window.FarmPanelTransport&&window.FarmPanelTransport.active()){return await window.FarmPanelTransport.stage(request);}
     if(typeof CompressionStream!=='function'){throw new Error('compression unavailable');}
     var stream=new Blob([source]).stream().pipeThrough(new CompressionStream('deflate'));
     var compressed=new Uint8Array(await new Response(stream).arrayBuffer());
