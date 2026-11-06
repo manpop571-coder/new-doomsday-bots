@@ -1,1 +1,6 @@
 .bag-heading{margin-top:14px}.bag-equivalent{font-size:.85rem;line-height:1.7}.bag-items{display:grid;gap:12px;margin-top:18px}.bag-item{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px;border:1px solid #575034;border-radius:14px;background:#191d15}.bag-item img{object-fit:contain}.bag-item h4{margin:0 0 8px;font-size:.95rem}.bag-item p{margin:5px 0}.bag-item label{display:block;font-size:.85rem;margin-bottom:10px}.bag-item input,.bag-item select{width:100%;margin-top:5px;box-sizing:border-box}.bag-item button{width:100%}.management-result{padding:12px 0;border-bottom:1px solid #474331;font-size:.9rem}.management-result small{display:block;margin-top:5px;opacity:.7}.rally-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.management-warning{padding:12px;border:1px solid #936b24;border-radius:10px}.editor-tab{min-height:68px}
+.bag-item .box-select{display:flex;align-items:flex-start;gap:10px;font-weight:700;cursor:pointer;line-height:1.5}
+.bag-item .box-select input[type=checkbox]{width:22px;height:22px;flex:0 0 22px;margin:2px 0;accent-color:#f4ba50}
+.bag-item:has(input[data-box-selected]:checked){border-color:#e9b552;background:rgba(233,181,82,.09)}
+.box-batch-actions{margin-top:18px}.box-batch-actions .gold-btn{width:100%;white-space:normal}
+.management-result p{white-space:pre-line;overflow-wrap:anywhere}
